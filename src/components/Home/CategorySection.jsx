@@ -32,7 +32,7 @@ function CategorySection({ sectionTitle, categories }) {
                   }
                   alt={item.name}
                   layout="fill"
-                  objectFit="cover"
+                  objectFit="contain"
                   className="transition-transform duration-300 group-hover:scale-105"
                   priority={idx === 0}
                 />
