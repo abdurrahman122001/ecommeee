@@ -17,9 +17,11 @@ function CardPage() {
   const { cart } = useSelector((state) => state.cart);
   const [getCarts, setGetCarts] = useState(null);
   const [langCntnt, setLangCntnt] = useState(null);
+
   useEffect(() => {
     setLangCntnt(languageModel());
   }, []);
+
   const deleteItem = (id) => {
     if (auth()) {
       apiRequest
@@ -27,8 +29,8 @@ function CardPage() {
           id: id,
           token: auth().access_token,
         })
-        .then((res) => {
-          toast.warn("Remove from Cart", {
+        .then(() => {
+          toast.warn("Removed from Cart", {
             autoClose: 1000,
           });
           dispatch(fetchCart());
@@ -40,6 +42,7 @@ function CardPage() {
       return false;
     }
   };
+
   useEffect(() => {
     if (cart && cart.cartProducts.length > 0) {
       const cartsItems = cart.cartProducts.map((item) => {
@@ -55,49 +58,49 @@ function CardPage() {
       setGetCarts([]);
     }
   }, [cart]);
+
   const serverReqIncreseQty = (id) => {
     if (auth()) {
       apiRequest.incrementQyt(id, auth().access_token);
-      if(getCarts &&
-          getCarts.length > 0){
-        const updateCart= getCarts.map((cart) => {
+      if (getCarts && getCarts.length > 0) {
+        const updateCart = getCarts.map((cart) => {
           if (cart.id === id) {
-            const updatePrice = cart.product.offer_price|| cart.product.price;
-            const updateQty = cart.qty+1
+            const updatePrice = cart.product.offer_price || cart.product.price;
+            const updateQty = cart.qty + 1;
             return {
               ...cart,
               totalPrice: updatePrice * updateQty,
-              qty:cart.qty+1
+              qty: cart.qty + 1,
             };
           }
           return cart;
-        })
+        });
         setGetCarts(updateCart);
       }
     }
   };
+
   const serverReqDecreseQyt = (id) => {
     if (auth()) {
       apiRequest.decrementQyt(id, auth().access_token);
-
-      if(getCarts &&
-          getCarts.length > 0){
-        const updateCart= getCarts.map((cart) => {
+      if (getCarts && getCarts.length > 0) {
+        const updateCart = getCarts.map((cart) => {
           if (cart.id === id) {
-            const updatePrice = cart.product.offer_price|| cart.product.price;
-            const updateQty = cart.qty-1
+            const updatePrice = cart.product.offer_price || cart.product.price;
+            const updateQty = cart.qty - 1;
             return {
               ...cart,
               totalPrice: updatePrice * updateQty,
-              qty:cart.qty-1
+              qty: cart.qty - 1,
             };
           }
           return cart;
-        })
+        });
         setGetCarts(updateCart);
       }
     }
   };
+
   const clearCart = async () => {
     if (auth()) {
       setGetCarts([]);
@@ -113,8 +116,8 @@ function CardPage() {
   return (
     <>
       {getCarts && getCarts.length === 0 ? (
-        <div className="cart-page-wrapper w-full pt-[60px] pb-[114px]">
-          <div className="container-x mx-auto">
+        <div className="cart-page-wrapper w-full pt-12 pb-28 min-h-[60vh]">
+          <div className="container mx-auto px-2">
             <BreadcrumbCom
               paths={[
                 { name: langCntnt && langCntnt.home, path: "/" },
@@ -125,7 +128,7 @@ function CardPage() {
           </div>
         </div>
       ) : (
-        <div className="cart-page-wrapper w-full bg-white  pb-[114px]">
+        <div className="cart-page-wrapper w-full bg-white pb-28 min-h-[60vh]">
           <div className="w-full">
             <PageTitle
               title={langCntnt && langCntnt.Your_cart}
@@ -135,32 +138,33 @@ function CardPage() {
               ]}
             />
           </div>
-          <div className="w-full pt-[60px]">
-            <div className="container-x mx-auto">
+          <div className="w-full pt-8">
+            <div className="container mx-auto px-2">
               <ProductsTable
                 incrementQty={serverReqIncreseQty}
                 decrementQty={serverReqDecreseQyt}
                 deleteItem={deleteItem}
                 cartItems={getCarts && getCarts}
-                className="mb-[30px]"
+                className="mb-8"
               />
-              <div className="w-full sm:flex justify-between">
-                <div className="flex space-x-4 items-center">
-                  <button onClick={clearCart} type="button">
-                    <div className="w-full text-sm font-semibold text-qred mb-5 sm:mb-0">
+              {/* Responsive actions */}
+              <div className="w-full flex flex-col sm:flex-row sm:justify-between gap-5 mt-5">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                  <button onClick={clearCart} type="button" className="w-full sm:w-auto">
+                    <span className="block text-sm font-semibold text-qred mb-1 sm:mb-0">
                       {langCntnt && langCntnt.Clear_Cart}
-                    </div>
+                    </span>
                   </button>
-                  <Link href="/cart">
-                    <div className="w-[140px] md:flex hidden rounded-full h-[50px] bg-[#F6F6F6] justify-center items-center cursor-pointer">
+                  <Link href="/cart" passHref>
+                    <div className="w-full sm:w-[140px] rounded-full h-[50px] bg-[#F6F6F6] flex justify-center items-center cursor-pointer">
                       <span className="text-sm font-semibold">
                         {langCntnt && langCntnt.Update_Cart}
                       </span>
                     </div>
                   </Link>
-                  <Link href="/checkout">
-                    <div className="md:w-[300px]  w-1/2  h-[50px]  flex justify-center items-center cursor-pointer">
-                      <div className=" transition-common bg-qpurple hover:bg-qpurplelow/10 border border-transparent hover:border-qpurple hover:text-qpurple text-white flex justify-center items-center w-full h-full rounded-full">
+                  <Link href="/checkout" passHref>
+                    <div className="w-full sm:w-[220px] md:w-[300px] h-[50px] flex justify-center items-center cursor-pointer">
+                      <div className="transition-common bg-qpurple hover:bg-qpurplelow/10 border border-transparent hover:border-qpurple hover:text-qpurple text-white flex justify-center items-center w-full h-full rounded-full">
                         <span className="text-sm font-semibold">
                           {langCntnt && langCntnt.Proceed_to_Checkout}
                         </span>
@@ -176,4 +180,5 @@ function CardPage() {
     </>
   );
 }
+
 export default isAuth(CardPage);
