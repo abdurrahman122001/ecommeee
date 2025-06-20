@@ -23,9 +23,9 @@ import LoginContext from "../../Contexts/LoginContexts";
 // Add HeartIcon and CartIcon here, simple replacements or import your SVGs if you have them
 const HeartIcon = ({ filled }) => (
   filled ? (
-    <svg width="20" height="20" fill="#E8413A" viewBox="0 0 20 20"><path d="M10 18l-1.45-1.32C4.4 12.36 2 10.28 2 7.5 2 5.42 3.92 4 6.08 4c1.34 0 2.65.66 3.42 1.72C10.87 4.66 12.18 4 13.52 4 15.68 4 17.6 5.42 17.6 7.5c0 2.78-2.4 4.86-6.55 9.18L10 18z"/></svg>
+    <svg width="20" height="20" fill="#E8413A" viewBox="0 0 20 20"><path d="M10 18l-1.45-1.32C4.4 12.36 2 10.28 2 7.5 2 5.42 3.92 4 6.08 4c1.34 0 2.65.66 3.42 1.72C10.87 4.66 12.18 4 13.52 4 15.68 4 17.6 5.42 17.6 7.5c0 2.78-2.4 4.86-6.55 9.18L10 18z" /></svg>
   ) : (
-    <svg width="20" height="20" fill="none" stroke="#E8413A" viewBox="0 0 20 20"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 18l-1.45-1.32C4.4 12.36 2 10.28 2 7.5 2 5.42 3.92 4 6.08 4c1.34 0 2.65.66 3.42 1.72C10.87 4.66 12.18 4 13.52 4 15.68 4 17.6 5.42 17.6 7.5c0 2.78-2.4 4.86-6.55 9.18L10 18z"/></svg>
+    <svg width="20" height="20" fill="none" stroke="#E8413A" viewBox="0 0 20 20"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 18l-1.45-1.32C4.4 12.36 2 10.28 2 7.5 2 5.42 3.92 4 6.08 4c1.34 0 2.65.66 3.42 1.72C10.87 4.66 12.18 4 13.52 4 15.68 4 17.6 5.42 17.6 7.5c0 2.78-2.4 4.86-6.55 9.18L10 18z" /></svg>
   )
 );
 const CartIcon = () => (
@@ -109,8 +109,8 @@ export default function ProductCardStyleOne({ datas }) {
   const discount =
     datas.offer_price && datas.price && Number(datas.price) > Number(datas.offer_price)
       ? Math.round(
-          100 - (Number(datas.offer_price) / Number(datas.price)) * 100
-        )
+        100 - (Number(datas.offer_price) / Number(datas.price)) * 100
+      )
       : null;
 
   // Cart
@@ -131,14 +131,14 @@ export default function ProductCardStyleOne({ datas }) {
       if (datas.offer_price) {
         const sumOfferPrice = parseFloat(
           prices.reduce((prev, curr) => parseInt(prev) + parseInt(curr), 0) +
-            parseFloat(datas.offer_price)
+          parseFloat(datas.offer_price)
         );
         setPrice(datas.price);
         setOffer(sumOfferPrice);
       } else {
         const sumPrice = parseFloat(
           prices.reduce((prev, curr) => parseInt(prev) + parseInt(curr), 0) +
-            parseFloat(datas.price)
+          parseFloat(datas.price)
         );
         setPrice(sumPrice);
         setOffer(null);
@@ -206,8 +206,8 @@ export default function ProductCardStyleOne({ datas }) {
           .catch((err) => {
             toast.error(
               err.response &&
-                err.response.data.message &&
-                err.response.data.message
+              err.response.data.message &&
+              err.response.data.message
             );
           });
         dispatch(fetchCart());
@@ -227,8 +227,8 @@ export default function ProductCardStyleOne({ datas }) {
           .catch((err) => {
             toast.error(
               err.response &&
-                err.response.data.message &&
-                err.response.data.message
+              err.response.data.message &&
+              err.response.data.message
             );
           });
         dispatch(fetchCart());
@@ -251,7 +251,7 @@ export default function ProductCardStyleOne({ datas }) {
   };
 
   return (
-<div className="group relative bg-white rounded-lg shadow border border-gray-200 overflow-hidden transition hover:shadow-xl w-full h-[400px] flex flex-col">
+    <div className="group relative bg-white rounded-lg shadow border border-gray-200 overflow-hidden transition hover:shadow-xl w-full h-[400px] flex flex-col">
       {/* Discount Badge */}
       {discount && (
         <span className="absolute top-3 left-3 z-10 bg-[#E8413A] text-white text-xs font-semibold rounded px-2 py-1">
@@ -273,15 +273,26 @@ export default function ProductCardStyleOne({ datas }) {
 
       {/* Image */}
       <div className="relative w-full h-[320px] flex items-center justify-center bg-gray-50">
-        <Image
-          src={datas.image}
-          alt={datas.title}
-          layout="fill"
-          objectFit="cover"
-          className="transition"
-          priority
-          onError={() => setImgSrc("/placeholder.png")}
-        />
+<Link
+  href={{
+    pathname: "/single-product",
+    query: { slug: datas.slug },
+  }}
+  passHref
+  legacyBehavior // only needed if you’re on Next 12 or using pages/ and want the old <a> behavior
+>
+  <a className="relative block w-full h-[320px] cursor-pointer">
+    <Image
+      src={datas.image}
+      alt={datas.title}
+      layout="fill"
+      objectFit="cover"
+      className="transition"
+      priority
+      onError={() => setImgSrc("/placeholder.png")}
+    />
+  </a>
+</Link>
         {/* Add to Cart Button: appears only on hover */}
         <button
           onClick={() => addToCart(datas.id)}

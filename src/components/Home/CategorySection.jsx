@@ -8,7 +8,7 @@ function CategorySection({ sectionTitle, categories }) {
 
   return (
     <div className="w-full py-10 bg-white">
-      <div className="mx-auto max-w-7xl px-2 sm:px-4">
+      <div className="mx-auto max-w-7xl px-2 sm:px-4 rounded-2xl">
         <h2 className="text-2xl sm:text-3xl font-semibold mb-8 sm:mb-10">
           {sectionTitle}
         </h2>
@@ -21,7 +21,7 @@ function CategorySection({ sectionTitle, categories }) {
                 pathname: "/products",
                 query: { category: item.slug },
               }}
-              className="w-full rounded-2xl shadow-md overflow-hidden relative group transition-transform duration-300 hover:scale-105"
+              className="w-full rounded-6xl shadow-md overflow-hidden relative group transition-transform duration-300 hover:scale-105"
             >
               <div className="relative w-full h-[200px] md:h-[280px]">
                 <Image

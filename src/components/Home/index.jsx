@@ -62,13 +62,13 @@ export default function Home({ homepageData }) {
           sectionTitle={sectionTitles && sectionTitles.My_Market_Category}
         />
 
-        {homepage && (
+        {/* {homepage && (
           <BrandSection
             brands={homepage.brands.length > 0 ? homepage.brands : []}
             sectionTitle="Shop by Brand"
             className="brand-section-wrapper md:mb-[60px] mb-[30px]"
           />
-        )}
+        )} */}
 
         <div className="md:py-[60px] py-[30px] bg-qpurplelow/10">
           {homepage && (
