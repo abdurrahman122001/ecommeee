@@ -32,10 +32,12 @@ function CategorySection({ sectionTitle, categories }) {
                   }
                   alt={item.name}
                   layout="fill"
-                  objectFit="contain"
+                  objectFit="cover"          // Make image cover the area
+                  objectPosition="top"       // Align image to the top
                   className="transition-transform duration-300 group-hover:scale-105"
                   priority={idx === 0}
                 />
+
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent z-10" />
                 <span className="absolute bottom-4 left-0 w-full text-center text-white text-sm sm:text-lg font-semibold z-20">
                   {item.name}
