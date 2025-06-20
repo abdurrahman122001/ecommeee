@@ -42,7 +42,7 @@ export default function Home({ homepageData }) {
       setIsMultivendor(enable_multivendor && parseInt(enable_multivendor));
     }
   }, [isMultivendor]);
-/* Removed duplicate homepage declaration to fix redeclaration error */
+
   return (
     <>
       <Layout childrenClasses="pt-0">
@@ -51,7 +51,9 @@ export default function Home({ homepageData }) {
         {/* 👉 Mobile Category Scrollbar (Visible only on mobile) */}
         <MobileCategoryScroll />
 
+        {homepage && homepage.sliders.length > 0 && (
           <Banner sliders={homepage.sliders} className="banner-wrapper" />
+        )}
 
         <CategorySection
           categories={homepage.homepage_categories}
@@ -83,13 +85,13 @@ export default function Home({ homepageData }) {
           )}
         </div>
 
-        {homepage && (
+        {/* {homepage && (
           <CampaignCountDown
             className="md:mb-[60px] mb-[30px]"
             datas={homepage.flashSale}
             products={homepage.flashsale_products.slice(0, 4)}
           />
-        )}
+        )} */}
 
         {homepage && (
           <SectionStyleFour
@@ -98,7 +100,9 @@ export default function Home({ homepageData }) {
                 ? homepage.topRatedProducts.slice(0, 4)
                 : []
             }
-            className="top-selling-product md:mb-[60px] mb-[30px]"
+            sectionTitle={sectionTitles && sectionTitles.Top_Rated_Products}
+
+            className="top-selling-product mt-10 md:mb-[60px] mb-[30px]"
             seeMoreUrl={`/products?highlight=top_product`}
             categoryTitle={sectionTitles && sectionTitles.Top_Rated_Products} />
         )}
