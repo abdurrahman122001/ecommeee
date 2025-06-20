@@ -7,9 +7,9 @@ function CategorySection({ sectionTitle, categories }) {
   const visibleCategories = categories.slice(0, 4);
 
   return (
-    <div className="w-full py-10 bg-white">
+    <div className="w-full py-10 bg-white mt-10">
       <div className="mx-auto max-w-7xl px-2 sm:px-4 rounded-2xl">
-        <h2 className="text-2xl sm:text-3xl font-semibold mb-8 sm:mb-10">
+        <h2 className="text-2xl text-center sm:text-3xl font-semibold mb-8 sm:mb-10">
           {sectionTitle}
         </h2>
         {/* Responsive grid: 2 columns on mobile, 4 on md+ */}

@@ -11,6 +11,8 @@ import ThinPeople from "../../../Helpers/icons/ThinPeople";
 import SearchBox from "../../../Helpers/SearchBox";
 import languageModel from "../../../../../utils/languageModel";
 import DefaultUser from "../../../../contexts/DefaultUser";
+import { Search, ShoppingCart, UserRound, Heart } from "lucide-react";
+import { Shuffle } from "lucide-react";
 
 function AccountDropdown({ defaultImage, user, auth, logout }) {
   const [profileOpen, setProfileOpen] = useState(false);
@@ -117,7 +119,7 @@ function AccountDropdown({ defaultImage, user, auth, logout }) {
                     </a>
                   </Link>
                 </li>
-                
+
               )}
             </ul>
           </div>
@@ -203,9 +205,8 @@ export default function Middlebar({ className, settings }) {
 
             {/* Search Overlay */}
             <div
-              className={`w-full h-[240px] bg-white delay-300 shadow transition-all duration-300 ease-in-out fixed left-0 top-0 transform ${
-                searchToggle ? `translate-y-0` : "-translate-y-[100vh]"
-              }`}
+              className={`w-full h-[240px] bg-white delay-300 shadow transition-all duration-300 ease-in-out fixed left-0 top-0 transform ${searchToggle ? `translate-y-0` : "-translate-y-[100vh]"
+                }`}
               style={{ zIndex: 99 }}
             >
               <div className="w-full h-full flex justify-center items-center relative">
@@ -237,9 +238,8 @@ export default function Middlebar({ className, settings }) {
             {/* Search Overlay Blackout */}
             <div
               onClick={() => setSearchToggle(false)}
-              className={`w-full h-screen transition-all duration-300 ease-in-out bg-black bg-opacity-50 fixed left-0 top-0 z-40 transform ${
-                searchToggle ? `translate-y-0` : "-translate-y-[100vh]"
-              }`}
+              className={`w-full h-screen transition-all duration-300 ease-in-out bg-black bg-opacity-50 fixed left-0 top-0 z-40 transform ${searchToggle ? `translate-y-0` : "-translate-y-[100vh]"
+                }`}
             ></div>
 
             {/* Right menu */}
@@ -247,24 +247,10 @@ export default function Middlebar({ className, settings }) {
               {/* Search Icon */}
               <div
                 onClick={() => setSearchToggle(true)}
-                className="w-[52px] h-[52px] bg-qyellow flex justify-center items-center rounded-full cursor-pointer"
+                className="w-[52px] h-[52px] bg-yellow flex justify-center items-center rounded-full cursor-pointer"
               >
-                <span>
-                  <svg
-                    width="22"
-                    height="22"
-                    viewBox="0 0 22 22"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M13.9708 16.4151C12.5227 17.4021 10.9758 17.9723 9.27353 18.0062C5.58462 18.0802 2.75802 16.483 1.05056 13.1945C-1.76315 7.77253 1.33485 1.37571 7.25086 0.167548C12.2281 -0.848249 17.2053 2.87895 17.7198 7.98579C17.9182 9.95558 17.5566 11.7939 16.5852 13.5061C16.4512 13.742 16.483 13.8725 16.6651 14.0553C18.2412 15.6386 19.8112 17.2272 21.3735 18.8244C22.1826 19.6513 22.2058 20.7559 21.456 21.4932C20.7697 22.1678 19.7047 22.1747 18.9764 21.4793C18.3623 20.8917 17.7774 20.2737 17.1796 19.6688C16.118 18.5929 15.0564 17.5153 13.9708 16.4151ZM2.89545 9.0364C2.91692 12.4172 5.59664 15.1164 8.91967 15.1042C12.2384 15.092 14.9138 12.3493 14.8889 8.98505C14.864 5.63213 12.1826 2.92508 8.89047 2.92857C5.58204 2.93118 2.87397 5.68958 2.89545 9.0364Z"
-                      fill="#232532"
-                    />
-                  </svg>
-                </span>
+                <Search size={22} className="text-[#232532]" />
               </div>
-
               {/* Compare */}
               <div className="compaire relative">
                 {auth ? (
@@ -274,20 +260,7 @@ export default function Middlebar({ className, settings }) {
                       className="flex space-x-4 items-center"
                     >
                       <span className="cursor-pointer text-[#6E6D79]">
-                        {/* SVG ICON OMITTED FOR BREVITY */}
-                        <svg
-                          width="22"
-                          height="22"
-                          viewBox="0 0 22 22"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M22 11.0094C21.997 17.0881 17.0653 22.007 10.9802 22C4.90444 21.9931 -0.00941233 17.0569 1.3538e-05 10.9688C0.00943941 4.89602 4.95157 -0.0133673 11.0422 2.73441e-05C17.0961 0.013422 22.003 4.94315 22 11.0094ZM6.16553 10.7812C6.40365 7.62357 8.72192 6.28609 10.5868 6.19927C12.3305 6.11791 14.4529 7.33534 14.7465 8.61428C14.2425 8.61428 13.7459 8.61428 13.2429 8.61428C13.2429 9.02406 13.2429 9.39861 13.2429 9.79748C14.308 9.79748 15.3374 9.80641 16.3668 9.79301C16.7805 9.78755 17.0102 9.52909 17.0147 9.10046C17.0221 8.34143 17.0172 7.5824 17.0172 6.82337C17.0172 6.55795 17.0172 6.29254 17.0172 6.0311C16.5836 6.0311 16.2165 6.0311 15.7908 6.0311C15.7908 6.60459 15.7908 7.15724 15.7908 7.79374C13.9379 5.04436 10.8447 4.4545 8.48578 5.48241C6.21811 6.47064 4.90792 8.84695 5.04682 10.7817C5.40997 10.7812 5.77609 10.7812 6.16553 10.7812ZM15.8191 11.2178C15.7581 12.4576 15.3498 13.547 14.4742 14.4286C13.5976 15.3111 12.5265 15.772 11.2858 15.8008C9.57472 15.8405 7.568 14.6424 7.2495 13.3892C7.75403 13.3892 8.25013 13.3892 8.76012 13.3892C8.76012 12.9809 8.76012 12.6064 8.76012 12.2041C7.68458 12.2041 6.64178 12.1921 5.59997 12.21C5.19962 12.2169 5.00069 12.4839 4.99771 12.9442C4.99176 13.803 4.99573 14.6612 4.99573 15.52C4.99573 15.6698 4.99573 15.8196 4.99573 15.964C5.4318 15.964 5.79692 15.964 6.20224 15.964C6.20224 15.3895 6.20224 14.8418 6.20224 14.1686C7.07984 15.4912 8.16976 16.3465 9.58216 16.7617C11.0184 17.1839 12.4114 17.0494 13.7548 16.4035C15.8191 15.4113 17.0946 13.1466 16.9507 11.2178C16.5861 11.2178 16.2209 11.2178 15.8191 11.2178Z"
-                            fill="#6E6D79"
-                          />
-                          {/* White overlays omitted for brevity */}
-                        </svg>
+                        <Shuffle s size={22} className="text-[#6E6D79]" />
                       </span>
                       <span className="text-base text-qgray font-medium">
                         Compare
@@ -301,20 +274,7 @@ export default function Middlebar({ className, settings }) {
                       className="flex space-x-4 items-center"
                     >
                       <span className="cursor-pointer text-[#6E6D79]">
-                        {/* SVG ICON OMITTED FOR BREVITY */}
-                        <svg
-                          width="22"
-                          height="22"
-                          viewBox="0 0 22 22"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M22 11.0094C21.997 17.0881 17.0653 22.007 10.9802 22C4.90444 21.9931 -0.00941233 17.0569 1.3538e-05 10.9688C0.00943941 4.89602 4.95157 -0.0133673 11.0422 2.73441e-05C17.0961 0.013422 22.003 4.94315 22 11.0094ZM6.16553 10.7812C6.40365 7.62357 8.72192 6.28609 10.5868 6.19927C12.3305 6.11791 14.4529 7.33534 14.7465 8.61428C14.2425 8.61428 13.7459 8.61428 13.2429 8.61428C13.2429 9.02406 13.2429 9.39861 13.2429 9.79748C14.308 9.79748 15.3374 9.80641 16.3668 9.79301C16.7805 9.78755 17.0102 9.52909 17.0147 9.10046C17.0221 8.34143 17.0172 7.5824 17.0172 6.82337C17.0172 6.55795 17.0172 6.29254 17.0172 6.0311C16.5836 6.0311 16.2165 6.0311 15.7908 6.0311C15.7908 6.60459 15.7908 7.15724 15.7908 7.79374C13.9379 5.04436 10.8447 4.4545 8.48578 5.48241C6.21811 6.47064 4.90792 8.84695 5.04682 10.7817C5.40997 10.7812 5.77609 10.7812 6.16553 10.7812ZM15.8191 11.2178C15.7581 12.4576 15.3498 13.547 14.4742 14.4286C13.5976 15.3111 12.5265 15.772 11.2858 15.8008C9.57472 15.8405 7.568 14.6424 7.2495 13.3892C7.75403 13.3892 8.25013 13.3892 8.76012 13.3892C8.76012 12.9809 8.76012 12.6064 8.76012 12.2041C7.68458 12.2041 6.64178 12.1921 5.59997 12.21C5.19962 12.2169 5.00069 12.4839 4.99771 12.9442C4.99176 13.803 4.99573 14.6612 4.99573 15.52C4.99573 15.6698 4.99573 15.8196 4.99573 15.964C5.4318 15.964 5.79692 15.964 6.20224 15.964C6.20224 15.3895 6.20224 14.8418 6.20224 14.1686C7.07984 15.4912 8.16976 16.3465 9.58216 16.7617C11.0184 17.1839 12.4114 17.0494 13.7548 16.4035C15.8191 15.4113 17.0946 13.1466 16.9507 11.2178C16.5861 11.2178 16.2209 11.2178 15.8191 11.2178Z"
-                            fill="#6E6D79"
-                          />
-                          {/* White overlays omitted for brevity */}
-                        </svg>
+                        <Heart size={22} className="text-[#6E6D79]" />
                       </span>
                       <span className="text-base text-qgray font-medium capitalize">
                         {langCntnt && langCntnt.compare}

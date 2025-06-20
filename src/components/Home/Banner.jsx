@@ -1,10 +1,15 @@
-import Link from "next/link";
 import SimpleSlider from "../Helpers/SliderCom";
-import ShopNowBtn from "../Helpers/Buttons/ShopNowBtn";
 import { useRef } from "react";
 
-export default function Banner({ className = "", sliders = [] }) {
+export default function Banner({ className = "" }) {
   const sliderRef = useRef(null);
+
+  // Define the images array INSIDE the component
+  const sliders = [
+    { image: "/bg.jpg" },
+    { image: "/red.webp" },
+    // Add more images here as needed
+  ];
 
   const settings = {
     infinite: true,
@@ -20,46 +25,35 @@ export default function Banner({ className = "", sliders = [] }) {
     ],
   };
 
+  // Slightly smaller heights for the banner
+  const heightClasses = `
+    h-[150px] xs:h-[220px] sm:h-[300px] md:h-[400px] lg:h-[480px] xl:h-[540px]
+  `;
+
   return (
-    <div
-      className={`w-full relative 
-        h-[220px] xs:h-[300px] sm:h-[420px] md:h-[520px] lg:h-[620px] xl:h-[733px] 
-        ${className}`}
-    >
+    <div className={`w-full mx-auto max-w-7xl relative ${heightClasses} ${className}`}>
       <div className="w-full h-full">
         <SimpleSlider settings={settings} selector={sliderRef}>
-          {sliders.length > 0 &&
-            sliders.map((item, i) => (
-              <div key={i} className="w-full h-full">
-                <div
-                  className="w-full h-full min-h-full bg-center bg-no-repeat bg-cover flex items-center justify-center"
-                  style={{
-                    backgroundImage: 'url(/images/bg.jpg)',
-
-                  }}
-                >
-                  <div className="w-full h-full flex items-center justify-center">
-                    <div className="md:w-[400px] w-[90%] flex items-center justify-center mt-28 md:mt-0">
-                      <Link
-                        href={{
-                          pathname: "/single-product",
-                          query: { slug: item.product_slug },
-                        }}
-                        passHref
-                      >
-                        <ShopNowBtn
-                          className="md:w-[160px] w-[145px] h-[52px] bg-qpurple"
-                          textColor="text-white group-hover:text-white"
-                        />
-                      </Link>
-                    </div>
+          {sliders.map((item, i) => (
+            <div key={i} className="w-full h-full">
+              <div
+                className="w-full h-full min-h-full bg-center bg-no-repeat flex items-center justify-center"
+                style={{
+                  backgroundImage: `url(/images/${item.image})`,
+                  backgroundPosition: 'top',
+                  backgroundSize: 'cover'
+                }}
+              >
+                <div className="w-full h-full flex items-center justify-center">
+                  <div className="md:w-[400px] w-[90%] flex items-center justify-center mt-14 md:mt-0">
+                    {/* Add overlay content here if needed */}
                   </div>
                 </div>
               </div>
-            ))}
+            </div>
+          ))}
         </SimpleSlider>
       </div>
     </div>
   );
 }
-

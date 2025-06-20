@@ -67,7 +67,7 @@ export default function SectionStyleFour({
     <div className={`section-style-four ${className || ""}`}>
       <ViewMoreTitle categoryTitle={sectionTitle} seeMoreUrl={seeMoreUrl}>
         {/* Mobile slider */}
-        <div className="block sm:hidden px-4 overflow-visible">
+        <div className="block sm:hidden px-4 pb-5 overflow-visible">
           <Slider {...sliderSettings}>
             {items.map((item) => (
               <div key={item.id} className="px-2">

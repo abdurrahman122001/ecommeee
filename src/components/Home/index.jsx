@@ -42,7 +42,7 @@ export default function Home({ homepageData }) {
       setIsMultivendor(enable_multivendor && parseInt(enable_multivendor));
     }
   }, [isMultivendor]);
-
+/* Removed duplicate homepage declaration to fix redeclaration error */
   return (
     <>
       <Layout childrenClasses="pt-0">
@@ -51,9 +51,7 @@ export default function Home({ homepageData }) {
         {/* 👉 Mobile Category Scrollbar (Visible only on mobile) */}
         <MobileCategoryScroll />
 
-        {homepage && homepage.sliders.length > 0 && (
           <Banner sliders={homepage.sliders} className="banner-wrapper" />
-        )}
 
         <CategorySection
           categories={homepage.homepage_categories}

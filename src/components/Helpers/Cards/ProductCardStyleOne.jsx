@@ -251,7 +251,7 @@ export default function ProductCardStyleOne({ datas }) {
   };
 
   return (
-    <div className="group relative bg-white rounded-lg shadow border border-gray-200 overflow-hidden transition hover:shadow-xl w-full h-[400px] flex flex-col">
+    <div className="group relative pb-10 bg-white rounded-lg shadow border border-gray-200 overflow-hidden transition hover:shadow-xl w-full h-[400px] flex flex-col pb-4">
       {/* Discount Badge */}
       {discount && (
         <span className="absolute top-3 left-3 z-10 bg-[#E8413A] text-white text-xs font-semibold rounded px-2 py-1">
@@ -273,26 +273,26 @@ export default function ProductCardStyleOne({ datas }) {
 
       {/* Image */}
       <div className="relative w-full h-[320px] flex items-center justify-center bg-gray-50">
-<Link
-  href={{
-    pathname: "/single-product",
-    query: { slug: datas.slug },
-  }}
-  passHref
-  legacyBehavior // only needed if you’re on Next 12 or using pages/ and want the old <a> behavior
->
-  <a className="relative block w-full h-[320px] cursor-pointer">
-    <Image
-      src={datas.image}
-      alt={datas.title}
-      layout="fill"
-      objectFit="cover"
-      className="transition"
-      priority
-      onError={() => setImgSrc("/placeholder.png")}
-    />
-  </a>
-</Link>
+        <Link
+          href={{
+            pathname: "/single-product",
+            query: { slug: datas.slug },
+          }}
+          passHref
+          legacyBehavior // only needed if you’re on Next 12 or using pages/ and want the old <a> behavior
+        >
+          <a className="relative block w-full h-[320px] cursor-pointer">
+            <Image
+              src={datas.image}
+              alt={datas.title}
+              layout="fill"
+              objectFit="cover"
+              className="transition"
+              priority
+              onError={() => setImgSrc("/placeholder.png")}
+            />
+          </a>
+        </Link>
         {/* Add to Cart Button: appears only on hover */}
         <button
           onClick={() => addToCart(datas.id)}
@@ -324,7 +324,7 @@ export default function ProductCardStyleOne({ datas }) {
       </Link>
 
       {/* Price Row */}
-      <div className="px-3 pb-4 flex items-center space-x-2">
+      <div className="px-3 pb-6 flex items-center space-x-2 mt-auto">
         {offerPrice && offerPrice > 0 && offerPrice < price ? (
           <>
             <span className="text-gray-400 line-through text-sm">
@@ -342,7 +342,9 @@ export default function ProductCardStyleOne({ datas }) {
             {price}
           </span>
         )}
+        
       </div>
+      <div className="h-4" />
     </div>
   );
 }
