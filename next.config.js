@@ -11,7 +11,7 @@ const pwa = process.env.NEXT_PWA_STATUS;
 // Main Next.js config
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
+  swcMinify: false, // <--- Disabled here
   images: {
     domains: [
       hostname,                // Allow your domain
