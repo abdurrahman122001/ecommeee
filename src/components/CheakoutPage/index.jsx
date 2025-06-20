@@ -69,12 +69,13 @@ function CheakoutPage() {
   useEffect(() => {
     if (couponCode) {
       if (couponCode.offer_type === "2") {
-        let price = totalPrice - parseInt(couponCode.discount);
-        setDiscountCoupon(totalPrice - price);
+        // fixed amount off
+        const newPrice = totalPrice - parseInt(couponCode.discount, 10);
+        setDiscountCoupon(totalPrice - newPrice);
       } else {
-        let price =
-          (parseInt(couponCode.discount) / 100) * parseInt(totalPrice);
-        setDiscountCoupon(price);
+        // percentage off
+        const newPrice = (parseInt(couponCode.discount, 10) / 100) * totalPrice;
+        setDiscountCoupon(newPrice);
       }
     }
   }, [couponCode, totalPrice]);
@@ -136,8 +137,7 @@ function CheakoutPage() {
   const getAllAddress = () => {
     axios
       .get(
-        `${process.env.NEXT_PUBLIC_BASE_URL}api/user/checkout?token=${
-          auth().access_token
+        `${process.env.NEXT_PUBLIC_BASE_URL}api/user/checkout?token=${auth().access_token
         }`
       )
       .then((res) => {
@@ -145,7 +145,7 @@ function CheakoutPage() {
           !!(
             res.data &&
             res.data.sslcommerz &&
-            parseInt( res.data.sslcommerz.status) === 1
+            parseInt(res.data.sslcommerz.status) === 1
           )
         );
         setPaypalStatus(
@@ -244,31 +244,26 @@ function CheakoutPage() {
       });
   };
   useEffect(() => {
-    if (auth()) {
-      getAllAddress();
-      axios
-        .get(
-          `${process.env.NEXT_PUBLIC_BASE_URL}api/user/address/create?token=${
-            auth().access_token
-          }`
-        )
-        .then((res) => {
-          if (res.data) {
-            setCountryDropdown(res.data.countries);
-          }
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-    }
+    if (!auth()) return;
+
+    getAllAddress();
+
+    axios
+      .get(`${process.env.NEXT_PUBLIC_BASE_URL}api/user/address/create?token=${auth().access_token}`)
+      .then((res) => {
+        if (res.data) {
+          setCountryDropdown(res.data.countries);
+        }
+      })
+      .catch((err) => console.error(err));
   }, []);
+
   const getState = (value) => {
     if (auth() && value) {
       setCountry(value.id);
       axios
         .get(
-          `${process.env.NEXT_PUBLIC_BASE_URL}api/user/state-by-country/${
-            value.id
+          `${process.env.NEXT_PUBLIC_BASE_URL}api/user/state-by-country/${value.id
           }?token=${auth().access_token}`
         )
         .then((res) => {
@@ -287,8 +282,7 @@ function CheakoutPage() {
       setState(value.id);
       axios
         .get(
-          `${process.env.NEXT_PUBLIC_BASE_URL}api/user/city-by-state/${
-            value.id
+          `${process.env.NEXT_PUBLIC_BASE_URL}api/user/city-by-state/${value.id
           }?token=${auth().access_token}`
         )
         .then((res) => {
@@ -341,8 +335,8 @@ function CheakoutPage() {
           console.log(err);
           setLoading(false);
           err.response && setErrors(err.response.data.errors);
-          if(err.response.status===403){
-            toast.error( err.response.data.message);
+          if (err.response.status === 403) {
+            toast.error(err.response.data.message);
           }
         });
     } else {
@@ -350,32 +344,39 @@ function CheakoutPage() {
     }
   };
   // parseInt(item.qty)
-  useEffect(() => {
-    setCarts(cart && cart.cartProducts);
+useEffect(() => {
+  if (!cart?.cartProducts?.length) return;
 
-    //total weight
-    const ttwList =
-      cart &&
-      cart.cartProducts.length > 0 &&
-      cart.cartProducts.map(
-        (item) => parseInt(item.product.weight) * parseInt(item.qty)
-      );
-    const ttw =
-      ttwList &&
-      ttwList.length > 0 &&
-      ttwList.reduce((prev, curr) => parseInt(prev) + parseInt(curr), 0);
-    setTotalWeight(ttw && ttw);
-    //total qty
-    const tqList =
-      cart &&
-      cart.cartProducts.length > 0 &&
-      cart.cartProducts.map((item) => parseInt(item.qty));
-    const tq =
-      tqList &&
-      tqList.length > 0 &&
-      tqList.reduce((prev, curr) => parseInt(prev) + parseInt(curr), 0);
-    setQty(tq && tq);
-  }, [cart]);
+  setCarts(cart.cartProducts);
+
+  // total weight
+  const weightList = cart.cartProducts.map(item =>
+    parseInt(item.product.weight, 10) * parseInt(item.qty, 10)
+  );
+  setTotalWeight(weightList.reduce((sum, w) => sum + w, 0));
+
+  // total qty
+  const qtyList = cart.cartProducts.map(item => parseInt(item.qty, 10));
+  setQty(qtyList.reduce((sum, q) => sum + q, 0));
+}, [cart]);
+
+// 5) Compute subTotal per line-item
+useEffect(() => {
+  if (!carts?.length) return;
+
+  setSubTotal(
+    carts.map((v) => {
+      // your existing price + variant + flash-sale math here...
+      let prices = v.variants
+        .map(variant => variant.variant_item?.price ?? 0)
+        .map(Number);
+      const variantSum = prices.length ? prices.reduce((a, b) => a + b, 0) : 0;
+      const basePrice = parseFloat(v.product.offer_price ?? v.product.price);
+      const unitPrice = checkProductExistsInFlashSale(v.product_id, variantSum + basePrice);
+      return unitPrice * v.qty;
+    })
+  );
+}, [carts]);
   const checkProductExistsInFlashSale = (id, price) => {
     if (websiteSetup) {
       const flashSaleOffer =
@@ -608,59 +609,46 @@ function CheakoutPage() {
                 });
             } else if (selectPayment && selectPayment === "paypal") {
               setStrpLoading(true);
-              const url = `${
-                process.env.NEXT_PUBLIC_BASE_URL
-              }user/checkout/paypal-react-web-view?token=${
-                auth().access_token
-              }&shipping_method_id=${parseInt(
-                selectedRule
-              )}&shipping_address_id=${selectedShipping}&coupon=${
-                couponCode && couponCode.code
-              }&billing_address_id=${selectedBilling}&success_url=${
-                typeof window !== "undefined" && window.location.origin
+              const url = `${process.env.NEXT_PUBLIC_BASE_URL
+                }user/checkout/paypal-react-web-view?token=${auth().access_token
+                }&shipping_method_id=${parseInt(
+                  selectedRule
+                )}&shipping_address_id=${selectedShipping}&coupon=${couponCode && couponCode.code
+                }&billing_address_id=${selectedBilling}&success_url=${typeof window !== "undefined" && window.location.origin
                   ? window.location.origin + "/order/"
                   : ""
-              }&faild_url=${
-                typeof window !== "undefined" && window.location.origin
+                }&faild_url=${typeof window !== "undefined" && window.location.origin
                   ? window.location.origin + "/payment-faild"
                   : ""
-              }`;
+                }`;
               router.push(url);
               localStorage.removeItem("coupon_set_date");
               localStorage.removeItem("coupon");
             } else if (selectPayment && selectPayment === "razorpay") {
-              const url = `${
-                process.env.NEXT_PUBLIC_BASE_URL
-              }user/checkout/razorpay-order?token=${
-                auth().access_token
-              }&shipping_method_id=${parseInt(
-                selectedRule
-              )}&shipping_address_id=${selectedShipping}&coupon=${
-                couponCode && couponCode.code
-              }&billing_address_id=${selectedBilling}`;
+              const url = `${process.env.NEXT_PUBLIC_BASE_URL
+                }user/checkout/razorpay-order?token=${auth().access_token
+                }&shipping_method_id=${parseInt(
+                  selectedRule
+                )}&shipping_address_id=${selectedShipping}&coupon=${couponCode && couponCode.code
+                }&billing_address_id=${selectedBilling}`;
               await axios
                 .get(url)
                 .then((res) => {
                   const order_id = res.data && res.data.order_id;
                   const amount = res.data && res.data.amount;
                   if (res.data) {
-                    const provideUrl = `${
-                      process.env.NEXT_PUBLIC_BASE_URL
-                    }user/checkout/razorpay-web-view?token=${
-                      auth().access_token
-                    }&shipping_address_id=${selectedShipping}&coupon=${
-                      couponCode && couponCode.code
-                    }&billing_address_id=${selectedBilling}&shipping_method_id=${parseInt(
-                      selectedRule
-                    )}&frontend_success_url=${
-                      typeof window !== "undefined" && window.location.origin
+                    const provideUrl = `${process.env.NEXT_PUBLIC_BASE_URL
+                      }user/checkout/razorpay-web-view?token=${auth().access_token
+                      }&shipping_address_id=${selectedShipping}&coupon=${couponCode && couponCode.code
+                      }&billing_address_id=${selectedBilling}&shipping_method_id=${parseInt(
+                        selectedRule
+                      )}&frontend_success_url=${typeof window !== "undefined" && window.location.origin
                         ? window.location.origin + "/order/"
                         : ""
-                    }&frontend_faild_url=${
-                      typeof window !== "undefined" && window.location.origin
+                      }&frontend_faild_url=${typeof window !== "undefined" && window.location.origin
                         ? window.location.origin + "/payment-faild"
                         : ""
-                    }&request_from=react_web&amount=${amount}&order_id=${order_id}`;
+                      }&request_from=react_web&amount=${amount}&order_id=${order_id}`;
                     router.push(provideUrl);
                     localStorage.removeItem("coupon_set_date");
                     localStorage.removeItem("coupon");
@@ -670,86 +658,66 @@ function CheakoutPage() {
                   console.log(err);
                 });
             } else if (selectPayment && selectPayment === "flutterWave") {
-              const url = `${
-                process.env.NEXT_PUBLIC_BASE_URL
-              }user/checkout/flutterwave-web-view?token=${
-                auth().access_token
-              }&shipping_method_id=${parseInt(
-                selectedRule
-              )}&shipping_address_id=${selectedShipping}&coupon=${
-                couponCode && couponCode.code
-              }&billing_address_id=${selectedBilling}&request_from=react_web&frontend_success_url=${
-                typeof window !== "undefined" && window.location.origin
+              const url = `${process.env.NEXT_PUBLIC_BASE_URL
+                }user/checkout/flutterwave-web-view?token=${auth().access_token
+                }&shipping_method_id=${parseInt(
+                  selectedRule
+                )}&shipping_address_id=${selectedShipping}&coupon=${couponCode && couponCode.code
+                }&billing_address_id=${selectedBilling}&request_from=react_web&frontend_success_url=${typeof window !== "undefined" && window.location.origin
                   ? window.location.origin + "/order/"
                   : ""
-              }&frontend_faild_url=${
-                typeof window !== "undefined" && window.location.origin
+                }&frontend_faild_url=${typeof window !== "undefined" && window.location.origin
                   ? window.location.origin + "/payment-faild"
                   : ""
-              }`;
+                }`;
               router.push(url);
               localStorage.removeItem("coupon_set_date");
               localStorage.removeItem("coupon");
             } else if (selectPayment && selectPayment === "mollie") {
-              const url = `${
-                process.env.NEXT_PUBLIC_BASE_URL
-              }user/checkout/pay-with-mollie?token=${
-                auth().access_token
-              }&shipping_method_id=${parseInt(
-                selectedRule
-              )}&shipping_address_id=${selectedShipping}&coupon=${
-                couponCode && couponCode.code
-              }&billing_address_id=${selectedBilling}&request_from=react_web&frontend_success_url=${
-                typeof window !== "undefined" && window.location.origin
+              const url = `${process.env.NEXT_PUBLIC_BASE_URL
+                }user/checkout/pay-with-mollie?token=${auth().access_token
+                }&shipping_method_id=${parseInt(
+                  selectedRule
+                )}&shipping_address_id=${selectedShipping}&coupon=${couponCode && couponCode.code
+                }&billing_address_id=${selectedBilling}&request_from=react_web&frontend_success_url=${typeof window !== "undefined" && window.location.origin
                   ? window.location.origin + "/order/"
                   : ""
-              }&frontend_faild_url=${
-                typeof window !== "undefined" && window.location.origin
+                }&frontend_faild_url=${typeof window !== "undefined" && window.location.origin
                   ? window.location.origin + "/payment-faild"
                   : ""
-              }`;
+                }`;
               router.push(url);
               localStorage.removeItem("coupon_set_date");
               localStorage.removeItem("coupon");
             } else if (selectPayment && selectPayment === "instamojo") {
-              const url = `${
-                process.env.NEXT_PUBLIC_BASE_URL
-              }user/checkout/pay-with-instamojo?token=${
-                auth().access_token
-              }&shipping_method_id=${parseInt(
-                selectedRule
-              )}&shipping_address_id=${selectedShipping}&coupon=${
-                couponCode && couponCode.code
-              }&billing_address_id=${selectedBilling}&request_from=react_web&frontend_success_url=${
-                typeof window !== "undefined" && window.location.origin
+              const url = `${process.env.NEXT_PUBLIC_BASE_URL
+                }user/checkout/pay-with-instamojo?token=${auth().access_token
+                }&shipping_method_id=${parseInt(
+                  selectedRule
+                )}&shipping_address_id=${selectedShipping}&coupon=${couponCode && couponCode.code
+                }&billing_address_id=${selectedBilling}&request_from=react_web&frontend_success_url=${typeof window !== "undefined" && window.location.origin
                   ? window.location.origin + "/order/"
                   : ""
-              }&frontend_faild_url=${
-                typeof window !== "undefined" && window.location.origin
+                }&frontend_faild_url=${typeof window !== "undefined" && window.location.origin
                   ? window.location.origin + "/payment-faild"
                   : ""
-              }`;
+                }`;
               router.push(url);
               localStorage.removeItem("coupon_set_date");
               localStorage.removeItem("coupon");
             } else if (selectPayment && selectPayment === "paystack") {
-              const url = `${
-                process.env.NEXT_PUBLIC_BASE_URL
-              }user/checkout/paystack-web-view?token=${
-                auth().access_token
-              }&shipping_method_id=${parseInt(
-                selectedRule
-              )}&shipping_address_id=${selectedShipping}&coupon=${
-                couponCode && couponCode.code
-              }&billing_address_id=${selectedBilling}&request_from=react_web&frontend_success_url=${
-                typeof window !== "undefined" && window.location.origin
+              const url = `${process.env.NEXT_PUBLIC_BASE_URL
+                }user/checkout/paystack-web-view?token=${auth().access_token
+                }&shipping_method_id=${parseInt(
+                  selectedRule
+                )}&shipping_address_id=${selectedShipping}&coupon=${couponCode && couponCode.code
+                }&billing_address_id=${selectedBilling}&request_from=react_web&frontend_success_url=${typeof window !== "undefined" && window.location.origin
                   ? window.location.origin + "/order/"
                   : ""
-              }&frontend_faild_url=${
-                typeof window !== "undefined" && window.location.origin
+                }&frontend_faild_url=${typeof window !== "undefined" && window.location.origin
                   ? window.location.origin + "/payment-faild"
                   : ""
-              }`;
+                }`;
               router.push(url);
               localStorage.removeItem("coupon_set_date");
               localStorage.removeItem("coupon");
@@ -779,23 +747,18 @@ function CheakoutPage() {
                   toast.success(err.response && err.response.message);
                 });
             } else if (selectPayment && selectPayment === "sslcommerce") {
-              const url = `${
-                process.env.NEXT_PUBLIC_BASE_URL
-              }user/checkout/sslcommerz-web-view?token=${
-                auth().access_token
-              }&shipping_method_id=${parseInt(
-                selectedRule
-              )}&shipping_address_id=${selectedShipping}&coupon=${
-                couponCode && couponCode.code
-              }&billing_address_id=${selectedBilling}&request_from=react_web&frontend_success_url=${
-                typeof window !== "undefined" && window.location.origin
+              const url = `${process.env.NEXT_PUBLIC_BASE_URL
+                }user/checkout/sslcommerz-web-view?token=${auth().access_token
+                }&shipping_method_id=${parseInt(
+                  selectedRule
+                )}&shipping_address_id=${selectedShipping}&coupon=${couponCode && couponCode.code
+                }&billing_address_id=${selectedBilling}&request_from=react_web&frontend_success_url=${typeof window !== "undefined" && window.location.origin
                   ? window.location.origin + "/order/"
                   : ""
-              }&frontend_faild_url=${
-                typeof window !== "undefined" && window.location.origin
+                }&frontend_faild_url=${typeof window !== "undefined" && window.location.origin
                   ? window.location.origin + "/payment-faild"
                   : ""
-              }`;
+                }`;
 
               router.push(url);
               localStorage.removeItem("coupon_set_date");
@@ -841,22 +804,20 @@ function CheakoutPage() {
                         <button
                           onClick={() => setActiveAddress("billing")}
                           type="button"
-                          className={`px-4 py-3 text-md font-medium rounded-md  ${
-                            activeAddress === "billing"
+                          className={`px-4 py-3 text-md font-medium rounded-md  ${activeAddress === "billing"
                               ? "text-white bg-qpurple"
                               : "text-qpurple"
-                          } `}
+                            } `}
                         >
                           {langCntnt && langCntnt.Billing_Address}
                         </button>
                         <button
                           onClick={() => setActiveAddress("shipping")}
                           type="button"
-                          className={`px-4 py-3 text-md font-medium rounded-md ml-1 ${
-                            activeAddress === "shipping"
+                          className={`px-4 py-3 text-md font-medium rounded-md ml-1 ${activeAddress === "shipping"
                               ? "text-white bg-qpurple"
                               : "text-qpurple"
-                          } `}
+                            } `}
                         >
                           {langCntnt && langCntnt.Shipping_Address}
                         </button>
@@ -883,11 +844,10 @@ function CheakoutPage() {
                             <div
                               onClick={() => setBilling(address.id)}
                               key={i}
-                              className={`w-full p-5 border cursor-pointer relative rounded ${
-                                address.id === selectedBilling
+                              className={`w-full p-5 border cursor-pointer relative rounded ${address.id === selectedBilling
                                   ? "border-qpurple bg-qpurplelow/10"
                                   : "border-transparent bg-primarygray"
-                              }`}
+                                }`}
                             >
                               <div className="flex justify-between items-center">
                                 <p className="title text-[22px] font-semibold">
@@ -1007,11 +967,10 @@ function CheakoutPage() {
                                 )
                               }
                               key={i}
-                              className={`w-full p-5 border relative cursor-pointer rounded ${
-                                address.id === selectedShipping
+                              className={`w-full p-5 border relative cursor-pointer rounded ${address.id === selectedShipping
                                   ? "border-qpurple bg-qpurplelow/10"
                                   : "border-transparent bg-primarygray"
-                              }`}
+                                }`}
                             >
                               <div className="flex justify-between items-center">
                                 <p className="title text-[22px] font-semibold">
@@ -1213,11 +1172,10 @@ function CheakoutPage() {
                             {langCntnt && langCntnt.Country}*
                           </h1>
                           <div
-                            className={`w-full h-[50px] bg-white border px-5 flex justify-between items-center border-qpurplelow/10 rounded mb-2 ${
-                              !!(errors && Object.hasOwn(errors, "country"))
+                            className={`w-full h-[50px] bg-white border px-5 flex justify-between items-center border-qpurplelow/10 rounded mb-2 ${!!(errors && Object.hasOwn(errors, "country"))
                                 ? "border-qred"
                                 : "border-qpurplelow/10"
-                            }`}
+                              }`}
                           >
                             <Selectbox
                               action={getState}
@@ -1266,11 +1224,10 @@ function CheakoutPage() {
                               {langCntnt && langCntnt.State}*
                             </h1>
                             <div
-                              className={`w-full h-[50px] bg-white border px-5 flex justify-between items-center border-qpurplelow/10 rounded mb-2 ${
-                                !!(errors && Object.hasOwn(errors, "state"))
+                              className={`w-full h-[50px] bg-white border px-5 flex justify-between items-center border-qpurplelow/10 rounded mb-2 ${!!(errors && Object.hasOwn(errors, "state"))
                                   ? "border-qred"
                                   : "border-qpurplelow/10"
-                              }`}
+                                }`}
                             >
                               <Selectbox
                                 action={getcity}
@@ -1318,11 +1275,10 @@ function CheakoutPage() {
                               {langCntnt && langCntnt.City}*
                             </h1>
                             <div
-                              className={`w-full h-[50px] bg-white border px-5 flex justify-between items-center border-qpurplelow/10 rounded mb-2 ${
-                                !!(errors && Object.hasOwn(errors, "city"))
+                              className={`w-full h-[50px] bg-white border px-5 flex justify-between items-center border-qpurplelow/10 rounded mb-2 ${!!(errors && Object.hasOwn(errors, "city"))
                                   ? "border-qred"
                                   : "border-qpurplelow/10"
-                              }`}
+                                }`}
                             >
                               <Selectbox
                                 action={selectCity}
@@ -1570,7 +1526,7 @@ function CheakoutPage() {
                       >
                         {currency_icon
                           ? currency_icon +
-                            parseFloat(discountCoupon).toFixed(2)
+                          parseFloat(discountCoupon).toFixed(2)
                           : parseFloat(discountCoupon).toFixed(2)}
                       </p>
                     </div>
@@ -1588,145 +1544,145 @@ function CheakoutPage() {
                               <>
                                 {parseInt(rule.condition_from) <=
                                   parseInt(totalPrice) && (
-                                  <>
-                                    {parseInt(rule.condition_to) >=
-                                    parseInt(totalPrice) ? (
-                                      <div className="flex justify-between items-center">
-                                        <div className="flex space-x-2.5 items-center">
-                                          <div className="input-radio">
-                                            <input
-                                              onChange={(e) =>
-                                                selectedRuleHandler(
-                                                  e,
-                                                  rule.shipping_fee
-                                                )
-                                              }
-                                              value={rule.id}
-                                              type="radio"
-                                              name="price"
-                                              className="accent-qpurple"
-                                            />
+                                    <>
+                                      {parseInt(rule.condition_to) >=
+                                        parseInt(totalPrice) ? (
+                                        <div className="flex justify-between items-center">
+                                          <div className="flex space-x-2.5 items-center">
+                                            <div className="input-radio">
+                                              <input
+                                                onChange={(e) =>
+                                                  selectedRuleHandler(
+                                                    e,
+                                                    rule.shipping_fee
+                                                  )
+                                                }
+                                                value={rule.id}
+                                                type="radio"
+                                                name="price"
+                                                className="accent-qpurple"
+                                              />
+                                            </div>
+                                            <span className="text-[15px] text-normal text-qgray">
+                                              {rule.shipping_rule}
+                                            </span>
                                           </div>
-                                          <span className="text-[15px] text-normal text-qgray">
-                                            {rule.shipping_rule}
+                                          <span
+                                            suppressHydrationWarning
+                                            className="text-[15px] text-normal text-qgray"
+                                          >
+                                            {currency_icon
+                                              ? currency_icon + rule.shipping_fee
+                                              : rule.shipping_fee}
                                           </span>
                                         </div>
-                                        <span
-                                          suppressHydrationWarning
-                                          className="text-[15px] text-normal text-qgray"
-                                        >
-                                          {currency_icon
-                                            ? currency_icon + rule.shipping_fee
-                                            : rule.shipping_fee}
-                                        </span>
-                                      </div>
-                                    ) : parseInt(rule.condition_to) === -1 ? (
-                                      <div className="flex justify-between items-center">
-                                        <div className="flex space-x-2.5 items-center">
-                                          <div className="input-radio">
-                                            <input
-                                              onChange={(e) =>
-                                                selectedRuleHandler(
-                                                  e,
-                                                  rule.shipping_fee
-                                                )
-                                              }
-                                              value={rule.id}
-                                              type="radio"
-                                              name="price"
-                                              className="accent-pink-500"
-                                            />
+                                      ) : parseInt(rule.condition_to) === -1 ? (
+                                        <div className="flex justify-between items-center">
+                                          <div className="flex space-x-2.5 items-center">
+                                            <div className="input-radio">
+                                              <input
+                                                onChange={(e) =>
+                                                  selectedRuleHandler(
+                                                    e,
+                                                    rule.shipping_fee
+                                                  )
+                                                }
+                                                value={rule.id}
+                                                type="radio"
+                                                name="price"
+                                                className="accent-pink-500"
+                                              />
+                                            </div>
+                                            <span className="text-[15px] text-normal text-qgray">
+                                              {rule.shipping_rule}
+                                            </span>
                                           </div>
-                                          <span className="text-[15px] text-normal text-qgray">
-                                            {rule.shipping_rule}
+                                          <span
+                                            suppressHydrationWarning
+                                            className="text-[15px] text-normal text-qgray"
+                                          >
+                                            {currency_icon
+                                              ? currency_icon + rule.shipping_fee
+                                              : rule.shipping_fee}
                                           </span>
                                         </div>
-                                        <span
-                                          suppressHydrationWarning
-                                          className="text-[15px] text-normal text-qgray"
-                                        >
-                                          {currency_icon
-                                            ? currency_icon + rule.shipping_fee
-                                            : rule.shipping_fee}
-                                        </span>
-                                      </div>
-                                    ) : (
-                                      ""
-                                    )}
-                                  </>
-                                )}
+                                      ) : (
+                                        ""
+                                      )}
+                                    </>
+                                  )}
                               </>
                             ) : rule.type === "base_on_weight" ? (
                               <>
                                 {parseInt(rule.condition_from) <=
                                   parseInt(totalWeight) && (
-                                  <>
-                                    {parseInt(rule.condition_to) >=
-                                    parseInt(totalWeight) ? (
-                                      <div className="flex justify-between items-center">
-                                        <div className="flex space-x-2.5 items-center">
-                                          <div className="input-radio">
-                                            <input
-                                              onChange={(e) =>
-                                                selectedRuleHandler(
-                                                  e,
-                                                  rule.shipping_fee
-                                                )
-                                              }
-                                              value={rule.id}
-                                              type="radio"
-                                              name="price"
-                                              className="accent-pink-500"
-                                            />
+                                    <>
+                                      {parseInt(rule.condition_to) >=
+                                        parseInt(totalWeight) ? (
+                                        <div className="flex justify-between items-center">
+                                          <div className="flex space-x-2.5 items-center">
+                                            <div className="input-radio">
+                                              <input
+                                                onChange={(e) =>
+                                                  selectedRuleHandler(
+                                                    e,
+                                                    rule.shipping_fee
+                                                  )
+                                                }
+                                                value={rule.id}
+                                                type="radio"
+                                                name="price"
+                                                className="accent-pink-500"
+                                              />
+                                            </div>
+                                            <span className="text-[15px] text-normal text-qgray">
+                                              {rule.shipping_rule}
+                                            </span>
                                           </div>
-                                          <span className="text-[15px] text-normal text-qgray">
-                                            {rule.shipping_rule}
+                                          <span
+                                            suppressHydrationWarning
+                                            className="text-[15px] text-normal text-qgray"
+                                          >
+                                            {currency_icon
+                                              ? currency_icon + rule.shipping_fee
+                                              : rule.shipping_fee}
                                           </span>
                                         </div>
-                                        <span
-                                          suppressHydrationWarning
-                                          className="text-[15px] text-normal text-qgray"
-                                        >
-                                          {currency_icon
-                                            ? currency_icon + rule.shipping_fee
-                                            : rule.shipping_fee}
-                                        </span>
-                                      </div>
-                                    ) : parseInt(rule.condition_to) === -1 ? (
-                                      <div className="flex justify-between items-center">
-                                        <div className="flex space-x-2.5 items-center">
-                                          <div className="input-radio">
-                                            <input
-                                              onChange={(e) =>
-                                                selectedRuleHandler(
-                                                  e,
-                                                  rule.shipping_fee
-                                                )
-                                              }
-                                              value={rule.id}
-                                              type="radio"
-                                              name="price"
-                                              className="accent-pink-500"
-                                            />
+                                      ) : parseInt(rule.condition_to) === -1 ? (
+                                        <div className="flex justify-between items-center">
+                                          <div className="flex space-x-2.5 items-center">
+                                            <div className="input-radio">
+                                              <input
+                                                onChange={(e) =>
+                                                  selectedRuleHandler(
+                                                    e,
+                                                    rule.shipping_fee
+                                                  )
+                                                }
+                                                value={rule.id}
+                                                type="radio"
+                                                name="price"
+                                                className="accent-pink-500"
+                                              />
+                                            </div>
+                                            <span className="text-[15px] text-normal text-qgray">
+                                              {rule.shipping_rule}
+                                            </span>
                                           </div>
-                                          <span className="text-[15px] text-normal text-qgray">
-                                            {rule.shipping_rule}
+                                          <span
+                                            suppressHydrationWarning
+                                            className="text-[15px] text-normal text-qgray"
+                                          >
+                                            {currency_icon
+                                              ? currency_icon + rule.shipping_fee
+                                              : rule.shipping_fee}
                                           </span>
                                         </div>
-                                        <span
-                                          suppressHydrationWarning
-                                          className="text-[15px] text-normal text-qgray"
-                                        >
-                                          {currency_icon
-                                            ? currency_icon + rule.shipping_fee
-                                            : rule.shipping_fee}
-                                        </span>
-                                      </div>
-                                    ) : (
-                                      ""
-                                    )}
-                                  </>
-                                )}
+                                      ) : (
+                                        ""
+                                      )}
+                                    </>
+                                  )}
                               </>
                             ) : rule.type === "base_on_qty" ? (
                               <>
@@ -1816,7 +1772,7 @@ function CheakoutPage() {
                       >
                         {currency_icon
                           ? currency_icon +
-                            (mainTotalPrice - discountCoupon).toFixed(2)
+                          (mainTotalPrice - discountCoupon).toFixed(2)
                           : (mainTotalPrice - discountCoupon).toFixed(2)}
                       </p>
                     </div>
@@ -1829,10 +1785,9 @@ function CheakoutPage() {
                           <div
                             onClick={() => setPaymentMethod("cashOnDelivery")}
                             className={`payment-item relative bg-[#F8F8F8] text-center w-full h-[50px] text-sm text-qpurple rounded flex justify-center items-center px-3 uppercase rounded cursor-pointer
-                              ${
-                                selectPayment === "cashOnDelivery"
-                                  ? "border-2 border-qpurple"
-                                  : "border border-qpurplelow/10"
+                              ${selectPayment === "cashOnDelivery"
+                                ? "border-2 border-qpurple"
+                                : "border border-qpurplelow/10"
                               }
                               `}
                           >
@@ -1865,11 +1820,10 @@ function CheakoutPage() {
                         {stripeStatus && (
                           <div
                             onClick={() => setPaymentMethod("stripe")}
-                            className={`payment-item text-center bg-[#F8F8F8] relative w-full h-[50px] font-bold text-sm text-white text-qpurple  rounded flex justify-center items-center px-3 uppercase rounded cursor-pointer ${
-                              selectPayment === "stripe"
+                            className={`payment-item text-center bg-[#F8F8F8] relative w-full h-[50px] font-bold text-sm text-white text-qpurple  rounded flex justify-center items-center px-3 uppercase rounded cursor-pointer ${selectPayment === "stripe"
                                 ? "border-2 border-qpurple"
                                 : "border border-qpurplelow/10"
-                            }`}
+                              }`}
                           >
                             <div className="w-full flex justify-center">
                               <span>
@@ -1913,11 +1867,10 @@ function CheakoutPage() {
                         {rezorPayStatue && (
                           <div
                             onClick={() => setPaymentMethod("razorpay")}
-                            className={`payment-item text-center bg-[#F8F8F8] relative w-full h-[50px] font-bold text-sm text-white text-qpurple  rounded flex justify-center items-center px-3 uppercase rounded cursor-pointer ${
-                              selectPayment === "razorpay"
+                            className={`payment-item text-center bg-[#F8F8F8] relative w-full h-[50px] font-bold text-sm text-white text-qpurple  rounded flex justify-center items-center px-3 uppercase rounded cursor-pointer ${selectPayment === "razorpay"
                                 ? "border-2 border-qpurple"
                                 : "border border-qpurplelow/10"
-                            }`}
+                              }`}
                           >
                             <div className="w-full flex justify-center">
                               <span>
@@ -1960,11 +1913,10 @@ function CheakoutPage() {
                         {flutterWaveStatus && (
                           <div
                             onClick={() => setPaymentMethod("flutterWave")}
-                            className={`payment-item text-center bg-[#F8F8F8] relative w-full h-[50px] font-bold text-sm text-white text-qpurple  rounded flex justify-center items-center px-3 uppercase rounded cursor-pointer ${
-                              selectPayment === "flutterWave"
+                            className={`payment-item text-center bg-[#F8F8F8] relative w-full h-[50px] font-bold text-sm text-white text-qpurple  rounded flex justify-center items-center px-3 uppercase rounded cursor-pointer ${selectPayment === "flutterWave"
                                 ? "border-2 border-qpurple"
                                 : "border border-qpurplelow/10"
-                            }`}
+                              }`}
                           >
                             <div className="w-full flex justify-center">
                               <span>
@@ -2017,11 +1969,10 @@ function CheakoutPage() {
                         {mollieStatus && (
                           <div
                             onClick={() => setPaymentMethod("mollie")}
-                            className={`payment-item text-center bg-[#F8F8F8] relative w-full h-[50px] font-bold text-sm text-white text-qpurple  rounded flex justify-center items-center px-3 uppercase rounded cursor-pointer ${
-                              selectPayment === "mollie"
+                            className={`payment-item text-center bg-[#F8F8F8] relative w-full h-[50px] font-bold text-sm text-white text-qpurple  rounded flex justify-center items-center px-3 uppercase rounded cursor-pointer ${selectPayment === "mollie"
                                 ? "border-2 border-qpurple"
                                 : "border border-qpurplelow/10"
-                            }`}
+                              }`}
                           >
                             <div className="w-full flex justify-center">
                               <span>
@@ -2064,11 +2015,10 @@ function CheakoutPage() {
                         {instaMojoStatus && (
                           <div
                             onClick={() => setPaymentMethod("instamojo")}
-                            className={`payment-item text-center bg-[#F8F8F8] relative w-full h-[50px] font-bold text-sm text-white text-qpurple  rounded flex justify-center items-center px-3 uppercase rounded cursor-pointer ${
-                              selectPayment === "instamojo"
+                            className={`payment-item text-center bg-[#F8F8F8] relative w-full h-[50px] font-bold text-sm text-white text-qpurple  rounded flex justify-center items-center px-3 uppercase rounded cursor-pointer ${selectPayment === "instamojo"
                                 ? "border-2 border-qpurple"
                                 : "border border-qpurplelow/10"
-                            }`}
+                              }`}
                           >
                             <div className="w-full flex justify-center">
                               <span>
@@ -2123,11 +2073,10 @@ function CheakoutPage() {
                         {payStackStatus && (
                           <div
                             onClick={() => setPaymentMethod("paystack")}
-                            className={`payment-item text-center bg-[#F8F8F8] relative w-full h-[50px] font-bold text-sm text-white text-qpurple  rounded flex justify-center items-center px-3 uppercase rounded cursor-pointer ${
-                              selectPayment === "paystack"
+                            className={`payment-item text-center bg-[#F8F8F8] relative w-full h-[50px] font-bold text-sm text-white text-qpurple  rounded flex justify-center items-center px-3 uppercase rounded cursor-pointer ${selectPayment === "paystack"
                                 ? "border-2 border-qpurple"
                                 : "border border-qpurplelow/10"
-                            }`}
+                              }`}
                           >
                             <div className="w-full flex justify-center">
                               <span>
@@ -2172,11 +2121,10 @@ function CheakoutPage() {
                         {paypalStatus && (
                           <div
                             onClick={() => setPaymentMethod("paypal")}
-                            className={`payment-item text-center bg-[#F8F8F8] relative w-full h-[50px] font-bold text-sm text-white text-qpurple  rounded flex justify-center items-center px-3 uppercase rounded cursor-pointer ${
-                              selectPayment === "paypal"
+                            className={`payment-item text-center bg-[#F8F8F8] relative w-full h-[50px] font-bold text-sm text-white text-qpurple  rounded flex justify-center items-center px-3 uppercase rounded cursor-pointer ${selectPayment === "paypal"
                                 ? "border-2 border-qpurple"
                                 : "border border-qpurplelow/10"
-                            }`}
+                              }`}
                           >
                             <div className="w-full flex justify-center">
                               <span>
@@ -2236,11 +2184,10 @@ function CheakoutPage() {
                         {bankPaymentStatus && (
                           <div
                             onClick={() => setPaymentMethod("bankpayment")}
-                            className={`payment-item text-center bg-[#F8F8F8] relative w-full h-[50px] font-bold text-sm text-white text-qpurple  rounded flex justify-center items-center px-3 uppercase rounded cursor-pointer ${
-                              selectPayment === "bankpayment"
+                            className={`payment-item text-center bg-[#F8F8F8] relative w-full h-[50px] font-bold text-sm text-white text-qpurple  rounded flex justify-center items-center px-3 uppercase rounded cursor-pointer ${selectPayment === "bankpayment"
                                 ? "border-2 border-qpurple"
                                 : "border border-qpurplelow/10"
-                            }`}
+                              }`}
                           >
                             <div className="w-full">
                               <span className="text-qblack font-bold text-base">
@@ -2271,11 +2218,10 @@ function CheakoutPage() {
                         {sslStatus && (
                           <div
                             onClick={() => setPaymentMethod("sslcommerce")}
-                            className={`payment-item text-center bg-[#F8F8F8] relative w-full h-[50px] font-bold text-sm text-white text-qpurple  rounded flex justify-center items-center px-3 uppercase rounded cursor-pointer ${
-                              selectPayment === "sslcommerce"
+                            className={`payment-item text-center bg-[#F8F8F8] relative w-full h-[50px] font-bold text-sm text-white text-qpurple  rounded flex justify-center items-center px-3 uppercase rounded cursor-pointer ${selectPayment === "sslcommerce"
                                 ? "border-2 border-qpurple"
                                 : "border border-qpurplelow/10"
-                            }`}
+                              }`}
                           >
                             <div className="w-full flex justify-center">
                               <span className="text-qblack font-bold text-base">
@@ -2336,7 +2282,7 @@ function CheakoutPage() {
                                 }
                               />
                               {stripeError &&
-                              Object.hasOwn(stripeError, "card_number") ? (
+                                Object.hasOwn(stripeError, "card_number") ? (
                                 <span className="text-sm mt-1 text-qred">
                                   {stripeError.card_number[0]}
                                 </span>
@@ -2362,8 +2308,8 @@ function CheakoutPage() {
                                   }
                                 />
                                 {stripeError &&
-                                Object.hasOwn(stripeError, "month") &&
-                                Object.hasOwn(stripeError, "year") ? (
+                                  Object.hasOwn(stripeError, "month") &&
+                                  Object.hasOwn(stripeError, "year") ? (
                                   <span className="text-sm mt-1 text-qred">
                                     Date in required
                                   </span>
@@ -2387,7 +2333,7 @@ function CheakoutPage() {
                                   }
                                 />
                                 {stripeError &&
-                                Object.hasOwn(stripeError, "cvv") ? (
+                                  Object.hasOwn(stripeError, "cvv") ? (
                                   <span className="text-sm mt-1 text-qred">
                                     {stripeError.cvv[0]}
                                   </span>
