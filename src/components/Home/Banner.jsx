@@ -2,7 +2,6 @@ import Link from "next/link";
 import SimpleSlider from "../Helpers/SliderCom";
 import ShopNowBtn from "../Helpers/Buttons/ShopNowBtn";
 import { useRef } from "react";
-import bg from "../../../public/images/red.webp";
 
 export default function Banner({ className = "", sliders = [] }) {
   const sliderRef = useRef(null);
@@ -35,7 +34,8 @@ export default function Banner({ className = "", sliders = [] }) {
                 <div
                   className="w-full h-full min-h-full bg-center bg-no-repeat bg-cover flex items-center justify-center"
                   style={{
-                    backgroundImage: `url(${bg.src})`,
+                    backgroundImage: 'url(/images/bg.jpg)',
+
                   }}
                 >
                   <div className="w-full h-full flex items-center justify-center">
