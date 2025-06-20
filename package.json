@@ -36,6 +36,7 @@
     "redux": "4.2.1",
     "slick-carousel": "^1.8.1",
     "swiper": "^11.2.8",
+    "terser": "^5.43.1",
     "web-vitals": "3.4.0"
   },
   "devDependencies": {
