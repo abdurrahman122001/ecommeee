@@ -16,7 +16,8 @@ const nextConfig = {
     domains: [
       hostname,                // Allow your domain
       "images.unsplash.com",
-      "medias.utsavfashion.com",  // ✅ Allow Unsplash images
+      "medias.utsavfashion.com",
+      "upload.wikimedia.org",  // ✅ Allow Unsplash images
     ],
   },
 };

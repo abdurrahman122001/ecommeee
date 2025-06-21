@@ -15,7 +15,7 @@ import BestSellers from "./BestSellers";
 import SectionStyleFive from "../Helpers/SectionStyleFive";
 import Ads from "./Ads";
 import MobileCategoryScroll from "./CategoryMob"; // 👈 Importing the mobile category component
-
+import AppDownloadBanner from "./AppDownloadBanner";
 export default function Home({ homepageData }) {
   const [homepage] = useState(homepageData);
   const getsectionTitles = homepageData.section_title;
@@ -61,6 +61,7 @@ export default function Home({ homepageData }) {
           adsTwo={homepage.banner_two}
           sectionTitle={sectionTitles && sectionTitles.My_Market_Category}
         />
+        <AppDownloadBanner/>
 
         {/* {homepage && (
           <BrandSection
