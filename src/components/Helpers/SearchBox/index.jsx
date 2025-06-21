@@ -1,28 +1,51 @@
-// import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
-// import axios from "axios";
 import { useRouter } from "next/router";
 import languageModel from "../../../../utils/languageModel";
+import { Search } from "lucide-react"; // npm i lucide-react
 
 export default function SearchBox({ className }) {
   const router = useRouter();
-  const [toggleCat, setToggleCat] = useState(false);
   const { websiteSetup } = useSelector((state) => state.websiteSetup);
-  const [categories, setCategories] = useState(null);
+  const [categories, setCategories] = useState([]);
   const [selectedCat, setSelectedCat] = useState(null);
   const [searchKey, setSearchkey] = useState("");
-  const categoryHandler = (value) => {
-    setSelectedCat(value);
-    setToggleCat(!toggleCat);
-  };
+  const [langCntnt, setLangCntnt] = useState(null);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const wrapperRef = useRef(null);
+
+  useEffect(() => {
+    setLangCntnt(languageModel());
+  }, []);
+
   useEffect(() => {
     if (websiteSetup) {
-      setCategories(
-        websiteSetup.payload && websiteSetup.payload.productCategories
-      );
+      setCategories(websiteSetup.payload?.productCategories || []);
     }
   }, [websiteSetup]);
+
+  // Click outside to close dropdown
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    }
+    if (showDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showDropdown]);
+
+  const categoryHandler = (cat) => {
+    setSelectedCat(cat);
+    setShowDropdown(false);
+  };
+
+  const clearCategory = () => {
+    setSelectedCat(null);
+  };
+
   const searchHandler = () => {
     if (searchKey !== "") {
       if (selectedCat) {
@@ -42,103 +65,111 @@ export default function SearchBox({ className }) {
         query: { category: selectedCat.slug },
       });
     } else {
-      return false;
+      setShowDropdown(true); // show dropdown if nothing entered
     }
   };
-  const [langCntnt, setLangCntnt] = useState(null);
-  useEffect(() => {
-    setLangCntnt(languageModel());
-  }, []);
+
+  // Show dropdown when input is focused
+  const handleInputFocus = () => {
+    setShowDropdown(true);
+  };
+
   return (
-    <>
-      <div className="relative w-full h-full">
-        <div
-          className={`w-full h-full flex items-center   border border-qborder rounded-full overflow-hidden  ${
-            className || ""
-          }`}
-        >
-          <div className="flex-1 bg-red-500 h-full">
-            <div className="h-full">
-              <input
-                value={searchKey}
-                onKeyDown={(e) => e.key === "Enter" && searchHandler()}
-                onChange={(e) => setSearchkey(e.target.value)}
-                type="text"
-                className="search-input text-base h-full placeholder:text-base"
-                placeholder="Search Product..."
-              />
-            </div>
-          </div>
-          <div className="w-[1px] h-[22px] bg-qborder"></div>
-          <div className="flex-1 flex items-center px-4 relative">
-            <button
-              onClick={() => setToggleCat(!toggleCat)}
-              type="button"
-              className="w-full text-base h-full  font-500 text-qgray flex justify-between items-center"
-            >
-              <span className="line-clamp-1">
-                {selectedCat ? selectedCat.name : "All Categories"}
-              </span>
-              <span>
-                <svg
-                  width="10"
-                  height="5"
-                  viewBox="0 0 10 5"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <rect
-                    x="9.18359"
-                    y="0.90918"
-                    width="5.78538"
-                    height="1.28564"
-                    transform="rotate(135 9.18359 0.90918)"
-                    fill="#8E8E8E"
-                  />
-                  <rect
-                    x="5.08984"
-                    y="5"
-                    width="5.78538"
-                    height="1.28564"
-                    transform="rotate(-135 5.08984 5)"
-                    fill="#8E8E8E"
-                  />
+    <div
+      className={`relative w-full flex justify-center ${className || ""}`}
+      ref={wrapperRef}
+    >
+      <div className="w-full max-w-3xl">
+        {/* Search bar */}
+        <div className="flex items-center bg-white border border-[#E5E5E5] rounded-full h-[54px] w-full transition">
+          <input
+            className="flex-1 px-6 h-full bg-transparent text-base rounded-full focus:outline-none"
+            value={searchKey}
+            onFocus={handleInputFocus}
+            onChange={e => setSearchkey(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && searchHandler()}
+            placeholder="Search"
+            aria-label="Search input"
+          />
+
+          {/* Category pill in input */}
+          {selectedCat && (
+            <span className="flex items-center bg-[#FFF4EF] border border-[#F87D2F] text-[#F87D2F] rounded-full px-3 py-1 ml-2 text-sm font-medium transition">
+              {selectedCat.name}
+              <button
+                onClick={clearCategory}
+                className="ml-2 focus:outline-none"
+                tabIndex={0}
+                aria-label="Clear selected category"
+              >
+                <svg width="12" height="12" viewBox="0 0 20 20">
+                  <line x1="5" y1="5" x2="15" y2="15" stroke="#F87D2F" strokeWidth="2" />
+                  <line x1="15" y1="5" x2="5" y2="15" stroke="#F87D2F" strokeWidth="2" />
                 </svg>
-              </span>
-            </button>
-          </div>
+              </button>
+            </span>
+          )}
+
+          {/* Search icon/button */}
           <button
             onClick={searchHandler}
-            className="search-btn w-[100px]  h-full text-base font-600 "
+            className="px-5 h-full bg-transparent focus:outline-none text-[#F87D2F]"
             type="button"
+            aria-label="Search"
           >
-            {langCntnt && langCntnt.Search}
+            <Search size={22} />
           </button>
         </div>
-        {toggleCat && (
-          <>
-            <div
-              className="w-full h-full fixed left-0 top-0 z-50"
-              onClick={() => setToggleCat(!toggleCat)}
-            ></div>
-            <div
-              className="w-[227px] h-auto absolute bg-white right-[110px] top-[58px] z-50 p-5"
-              style={{ boxShadow: "0px 15px 50px 0px rgba(0, 0, 0, 0.14)" }}
-            >
-              <ul className="flex flex-col space-y-2">
-                {categories &&
-                  categories.map((item, i) => (
-                    <li onClick={() => categoryHandler(item)} key={i}>
-                      <span className="text-qgray text-sm font-400 border-b border-transparent hover:border-qpurple hover:text-qpurple cursor-pointer">
-                        {item.name}
-                      </span>
-                    </li>
-                  ))}
-              </ul>
+
+        {/* Main search dropdown (clean, no shadow) */}
+        {showDropdown && (
+          <div className="absolute left-0 top-[60px] w-full bg-white rounded-2xl border border-[#E5E5E5] z-40 py-6 px-6">
+            {/* Most Searched Categories */}
+            <div className="font-semibold text-[15px] text-qblack mb-2">
+              Most Searched Categories
             </div>
-          </>
+            <div className="flex flex-wrap gap-6 mb-4">
+              {categories.slice(0, 8).map((cat, idx) => (
+                <span
+                  key={cat.slug || idx}
+                  onClick={() => categoryHandler(cat)}
+                  className="text-[15px] text-qgray hover:text-qpurple transition font-medium whitespace-nowrap cursor-pointer px-2 py-1 rounded"
+                  style={{ border: "1px solid transparent" }}
+                >
+                  {cat.name}
+                </span>
+              ))}
+            </div>
+            {/* More groups can go here */}
+            <div className="font-semibold text-[15px] text-qblack mb-2">Popular Searches</div>
+            <div className="flex flex-wrap gap-6 mb-4">
+              {/* Dummy data, replace with dynamic if you have */}
+              {["Banarasi Saree", "Ready to Ship", "Designer Blouse", "Mirror Work"].map((name, i) => (
+                <span
+                  key={name + i}
+                  className="text-[15px] text-qgray hover:text-qpurple transition font-medium whitespace-nowrap cursor-pointer px-2 py-1 rounded"
+                  style={{ border: "1px solid transparent" }}
+                >
+                  {name}
+                </span>
+              ))}
+            </div>
+            <div className="font-semibold text-[15px] text-qblack mb-2">Popular Collections</div>
+            <div className="flex flex-wrap gap-6">
+              {/* Dummy data, replace with dynamic if you have */}
+              {["New Arrivals", "Sale", "Plus Size", "Best Sellers"].map((name, i) => (
+                <span
+                  key={name + i}
+                  className="text-[15px] text-qgray hover:text-qpurple transition font-medium whitespace-nowrap cursor-pointer px-2 py-1 rounded"
+                  style={{ border: "1px solid transparent" }}
+                >
+                  {name}
+                </span>
+              ))}
+            </div>
+          </div>
         )}
       </div>
-    </>
+    </div>
   );
 }

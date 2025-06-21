@@ -17,30 +17,28 @@ function CardPage() {
   const { cart } = useSelector((state) => state.cart);
   const [getCarts, setGetCarts] = useState(null);
   const [langCntnt, setLangCntnt] = useState(null);
+  const [removingId, setRemovingId] = useState(null); // NEW STATE
 
   useEffect(() => {
     setLangCntnt(languageModel());
   }, []);
 
-  const deleteItem = (id) => {
+  // Make deleteItem async for loader to work properly
+  const deleteItem = async (id) => {
+    setRemovingId(id); // Set id before delete
     if (auth()) {
-      apiRequest
-        .deleteCartItem({
+      try {
+        await apiRequest.deleteCartItem({
           id: id,
           token: auth().access_token,
-        })
-        .then(() => {
-          toast.warn("Removed from Cart", {
-            autoClose: 1000,
-          });
-          dispatch(fetchCart());
-        })
-        .catch((err) => {
-          console.log(err);
         });
-    } else {
-      return false;
+        toast.warn("Removed from Cart", { autoClose: 1000 });
+        dispatch(fetchCart());
+      } catch (err) {
+        console.log(err);
+      }
     }
+    setRemovingId(null); // Reset after delete
   };
 
   useEffect(() => {
@@ -146,6 +144,7 @@ function CardPage() {
                 deleteItem={deleteItem}
                 cartItems={getCarts && getCarts}
                 className="mb-8"
+                removingId={removingId} // pass loader id
               />
               {/* Responsive actions */}
               <div className="w-full flex flex-col sm:flex-row sm:justify-between gap-5 mt-5">

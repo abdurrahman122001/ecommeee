@@ -5,6 +5,7 @@ import InputQuantityCom from "../Helpers/InputQuantityCom";
 import CheckProductIsExistsInFlashSale from "../Shared/CheckProductIsExistsInFlashSale";
 import languageModel from "../../../utils/languageModel";
 import Link from "next/link";
+import { FaSpinner } from "react-icons/fa";
 
 export default function ProductsTable({
   className,
@@ -13,8 +14,10 @@ export default function ProductsTable({
   calCPriceDependQunatity,
   incrementQty,
   decrementQty,
+  removingId, // NEW PROP
 }) {
   const [langCntnt, setLangCntnt] = useState(null);
+
   useEffect(() => {
     setLangCntnt(languageModel());
   }, []);
@@ -23,20 +26,19 @@ export default function ProductsTable({
       if (item.product.offer_price) {
         if (item.variants && item.variants.length > 0) {
           const prices = item.variants.map((item) =>
-              item.variant_item ? parseInt(item.variant_item.price) : 0
+            item.variant_item ? parseInt(item.variant_item.price) : 0
           );
-          const sumVarient = prices.reduce((p, c) => p + c);
+          const sumVarient = prices.reduce((p, c) => p + c, 0);
           return parseInt(item.product.offer_price) + sumVarient;
         } else {
-
           return item.product.offer_price;
         }
       } else {
         if (item.variants && item.variants.length > 0) {
           const prices = item.variants.map((item) =>
-              item.variant_item ? parseInt(item.variant_item.price) : 0
+            item.variant_item ? parseInt(item.variant_item.price) : 0
           );
-          const sumVarient = prices.reduce((p, c) => p + c);
+          const sumVarient = prices.reduce((p, c) => p + c, 0);
           return parseInt(item.product.price) + sumVarient;
         } else {
           return item.product.price;
@@ -47,13 +49,12 @@ export default function ProductsTable({
   const totalPriceCalc = (item) => {
     if (item) {
       const prices =
-          item.variants.length > 0
-              ? item.variants.map((item) =>
-                  item.variant_item ? parseFloat(item.variant_item.price) : 0
-              )
-              : false;
-      // console.log(prices);
-      const sumVarient = prices ? prices.reduce((p, c) => p + c) : false;
+        item.variants.length > 0
+          ? item.variants.map((item) =>
+              item.variant_item ? parseFloat(item.variant_item.price) : 0
+            )
+          : false;
+      const sumVarient = prices ? prices.reduce((p, c) => p + c, 0) : false;
       if (sumVarient) {
         const priceWithQty = sumVarient * parseFloat(item.qty);
         return parseFloat(item.totalPrice) + priceWithQty;
@@ -63,6 +64,7 @@ export default function ProductsTable({
     }
   };
   const { currency_icon } = settings();
+
   return (
     <div className={`w-full ${className || ""}`}>
       <div className="relative w-full overflow-x-auto rounded overflow-hidden border border-qpurplelow/10">
@@ -92,7 +94,7 @@ export default function ProductsTable({
                   key={item.id}
                   className="bg-white border-b border-qpurplelow/10 hover:bg-gray-50"
                 >
-                  <td className="pl-10  py-4  w-[380px]">
+                  <td className="pl-10 py-4 w-[380px]">
                     <div className="flex space-x-6 items-center">
                       <div className="w-[80px] h-[80px] rounded overflow-hidden flex justify-center items-center border border-qpurplelow/10 relative">
                         <Image
@@ -124,16 +126,14 @@ export default function ProductsTable({
                   <td className="text-center py-4 px-2">
                     <div className="flex space-x-1 items-center justify-center">
                       <span className="text-[15px] text-qblack font-medium">
-                        {
-                          <CheckProductIsExistsInFlashSale
-                            id={item.product_id}
-                            price={price(item)}
-                          />
-                        }
+                        <CheckProductIsExistsInFlashSale
+                          id={item.product_id}
+                          price={price(item)}
+                        />
                       </span>
                     </div>
                   </td>
-                  <td className=" py-4">
+                  <td className="py-4">
                     <div className="flex justify-center items-center">
                       <InputQuantityCom
                         decrementQty={decrementQty}
@@ -151,25 +151,32 @@ export default function ProductsTable({
                           id={item.product_id}
                           price={totalPriceCalc(item)}
                         />
-                        {/*{totalPriceCalc(item)}*/}
                       </span>
                     </div>
                   </td>
                   <td className="text-right py-4">
-                    <div className="flex space-x-1 items-center justify-center re">
-                      <span
-                        onClick={() => deleteItem(item.id)}
-                        className="cursor-pointer text-qgray w-2.5 h-2.5 transform scale-100 hover:scale-110 hover:text-qred transition duration-300 ease-in-out "
-                      >
-                        <svg
-                          viewBox="0 0 10 10"
-                          fill="none"
-                          className="fill-current"
-                          xmlns="http://www.w3.org/2000/svg"
+                    <div className="flex space-x-1 items-center justify-center re" style={{ minWidth: 24, minHeight: 24 }}>
+                      {removingId === item.id ? (
+                        <FaSpinner className="animate-spin text-qred" size={18} />
+                      ) : (
+                        <span
+                          onClick={() => deleteItem(item.id)}
+                          className="cursor-pointer text-qgray w-2.5 h-2.5 transform scale-100 hover:scale-110 hover:text-qred transition duration-300 ease-in-out flex items-center justify-center"
+                          style={{
+                            minWidth: "20px",
+                            minHeight: "20px",
+                          }}
                         >
-                          <path d="M9.7 0.3C9.3 -0.1 8.7 -0.1 8.3 0.3L5 3.6L1.7 0.3C1.3 -0.1 0.7 -0.1 0.3 0.3C-0.1 0.7 -0.1 1.3 0.3 1.7L3.6 5L0.3 8.3C-0.1 8.7 -0.1 9.3 0.3 9.7C0.7 10.1 1.3 10.1 1.7 9.7L5 6.4L8.3 9.7C8.7 10.1 9.3 10.1 9.7 9.7C10.1 9.3 10.1 8.7 9.7 8.3L6.4 5L9.7 1.7C10.1 1.3 10.1 0.7 9.7 0.3Z" />
-                        </svg>
-                      </span>
+                          <svg
+                            viewBox="0 0 10 10"
+                            fill="none"
+                            className="fill-current"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path d="M9.7 0.3C9.3 -0.1 8.7 -0.1 8.3 0.3L5 3.6L1.7 0.3C1.3 -0.1 0.7 -0.1 0.3 0.3C-0.1 0.7 -0.1 1.3 0.3 1.7L3.6 5L0.3 8.3C-0.1 8.7 -0.1 9.3 0.3 9.7C0.7 10.1 1.3 10.1 1.7 9.7L5 6.4L8.3 9.7C8.7 10.1 9.3 10.1 9.7 9.7C10.1 9.3 10.1 8.7 9.7 8.3L6.4 5L9.7 1.7C10.1 1.3 10.1 0.7 9.7 0.3Z" />
+                          </svg>
+                        </span>
+                      )}
                     </div>
                   </td>
                 </tr>

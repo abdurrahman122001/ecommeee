@@ -19,8 +19,8 @@ import ThinLove from "../icons/ThinLove";
 import Image from "next/image";
 import languageModel from "../../../../utils/languageModel";
 import LoginContext from "../../Contexts/LoginContexts";
+import { FaSpinner } from "react-icons/fa"; // <-- IMPORT SPINNER ICON
 
-// Add HeartIcon and CartIcon here, simple replacements or import your SVGs if you have them
 const HeartIcon = ({ filled }) => (
   filled ? (
     <svg width="20" height="20" fill="#E8413A" viewBox="0 0 20 20"><path d="M10 18l-1.45-1.32C4.4 12.36 2 10.28 2 7.5 2 5.42 3.92 4 6.08 4c1.34 0 2.65.66 3.42 1.72C10.87 4.66 12.18 4 13.52 4 15.68 4 17.6 5.42 17.6 7.5c0 2.78-2.4 4.86-6.55 9.18L10 18z" /></svg>
@@ -75,21 +75,6 @@ export default function ProductCardStyleOne({ datas }) {
     setLangCntnt(languageModel());
   }, []);
 
-  // Handle QuickView (not used in UI here)
-  const quickViewHandler = (slug) => {
-    setQuickView(!quickViewModal);
-    if (!quickViewData) {
-      axios
-        .get(`${process.env.NEXT_PUBLIC_BASE_URL}api/product/${slug}`)
-        .then((res) => {
-          setQuickViewData(res.data ? res.data : null);
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-    }
-  };
-
   useEffect(() => {
     if (quickViewModal) {
       document.body.style.overflow = "hidden";
@@ -105,7 +90,6 @@ export default function ProductCardStyleOne({ datas }) {
     setArWishlist(!!wishlisted);
   }, [wishlisted]);
 
-  // Calculate discount percent (if offer price exists)
   const discount =
     datas.offer_price && datas.price && Number(datas.price) > Number(datas.offer_price)
       ? Math.round(
@@ -113,13 +97,14 @@ export default function ProductCardStyleOne({ datas }) {
       )
       : null;
 
-  // Cart
   const varients = datas && datas.variants.length > 0 && datas.variants;
   const [getFirstVarients, setFirstVarients] = useState(
     varients && varients.map((v) => v.active_variant_items[0])
   );
   const [price, setPrice] = useState(null);
   const [offerPrice, setOffer] = useState(null);
+
+  const [addToCartLoading, setAddToCartLoading] = useState(false);
 
   useEffect(() => {
     if (varients) {
@@ -167,7 +152,9 @@ export default function ProductCardStyleOne({ datas }) {
       router.push("/login");
     }
   };
+
   const addToCart = (id) => {
+    setAddToCartLoading(true);
     const data = {
       id: id,
       token: auth() && auth().access_token,
@@ -194,42 +181,46 @@ export default function ProductCardStyleOne({ datas }) {
         const uri = `token=${data.token}&product_id=${data.id}&${variantString}${itemQueryStr}quantity=${data.quantity}`;
         apiRequest
           .addToCard(uri)
-          .then((res) =>
+          .then((res) => {
             toast.success(
               <Redirect
                 message={langCntnt && langCntnt.Item_added}
                 linkTxt={langCntnt && langCntnt.Go_To_Cart}
               />,
               { autoClose: 5000 }
-            )
-          )
+            );
+            setAddToCartLoading(false);
+          })
           .catch((err) => {
             toast.error(
               err.response &&
               err.response.data.message &&
               err.response.data.message
             );
+            setAddToCartLoading(false);
           });
         dispatch(fetchCart());
       } else {
         const uri = `token=${data.token}&product_id=${data.id}&quantity=${data.quantity}`;
         apiRequest
           .addToCard(uri)
-          .then((res) =>
+          .then((res) => {
             toast.success(
               <Redirect
                 message={langCntnt && langCntnt.Item_added}
                 linkTxt={langCntnt && langCntnt.Go_To_Cart}
               />,
               { autoClose: 5000 }
-            )
-          )
+            );
+            setAddToCartLoading(false);
+          })
           .catch((err) => {
             toast.error(
               err.response &&
               err.response.data.message &&
               err.response.data.message
             );
+            setAddToCartLoading(false);
           });
         dispatch(fetchCart());
       }
@@ -239,13 +230,13 @@ export default function ProductCardStyleOne({ datas }) {
         JSON.stringify({ type: "add-to-cart", ...data })
       );
       loginPopupBoard.handlerPopup(true);
+      setAddToCartLoading(false);
     }
   };
 
   const { currency_icon } = settings();
   const [imgSrc, setImgSrc] = useState(null);
 
-  // image loader (not used here, but if needed for fallback image)
   const loadImg = (value) => {
     setImgSrc(value);
   };
@@ -279,7 +270,7 @@ export default function ProductCardStyleOne({ datas }) {
             query: { slug: datas.slug },
           }}
           passHref
-          legacyBehavior // only needed if you’re on Next 12 or using pages/ and want the old <a> behavior
+          legacyBehavior
         >
           <a className="relative block w-full h-[320px] cursor-pointer">
             <Image
@@ -296,14 +287,22 @@ export default function ProductCardStyleOne({ datas }) {
         {/* Add to Cart Button: appears only on hover */}
         <button
           onClick={() => addToCart(datas.id)}
-          className="absolute left-1/2 -translate-x-1/2 bottom-0 w-[90%] py-2 mb-3 rounded bg-black/70 text-white text-base font-semibold opacity-0 group-hover:opacity-100 transition hover:bg-qpurple"
+          className="absolute left-1/2 -translate-x-1/2 bottom-0 w-[90%] py-2 mb-3 rounded bg-black/70 text-white text-base font-semibold opacity-0 group-hover:opacity-100 transition hover:bg-qpurple flex items-center justify-center"
           style={{
             backdropFilter: "blur(2px)",
           }}
+          disabled={addToCartLoading}
         >
           <span className="flex items-center justify-center">
             <CartIcon />
-            ADD TO CART
+            {addToCartLoading ? (
+              <>
+                ADDING...
+                <FaSpinner className="ml-2 animate-spin" size={20} />
+              </>
+            ) : (
+              "ADD TO CART"
+            )}
           </span>
         </button>
       </div>
@@ -342,7 +341,6 @@ export default function ProductCardStyleOne({ datas }) {
             {price}
           </span>
         )}
-        
       </div>
       <div className="h-4" />
     </div>

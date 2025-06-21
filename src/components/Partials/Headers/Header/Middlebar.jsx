@@ -11,14 +11,13 @@ import ThinPeople from "../../../Helpers/icons/ThinPeople";
 import SearchBox from "../../../Helpers/SearchBox";
 import languageModel from "../../../../../utils/languageModel";
 import DefaultUser from "../../../../contexts/DefaultUser";
-import { Search, ShoppingCart, UserRound, Heart } from "lucide-react";
+import { ShoppingCart, UserRound, Heart } from "lucide-react";
 import { Shuffle } from "lucide-react";
 
 function AccountDropdown({ defaultImage, user, auth, logout }) {
   const [profileOpen, setProfileOpen] = useState(false);
   const dropdownRef = useRef();
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -33,7 +32,6 @@ function AccountDropdown({ defaultImage, user, auth, logout }) {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* User icon and (if logged in) user info */}
       <button
         onClick={() => setProfileOpen((v) => !v)}
         className="flex items-center outline-none focus:ring-0"
@@ -69,7 +67,6 @@ function AccountDropdown({ defaultImage, user, auth, logout }) {
           </div>
         )}
       </button>
-      {/* Dropdown */}
       {profileOpen && (
         <div className="w-[210px] bg-white absolute right-0 top-[60px] z-40 border-t-4 border-qpurple flex flex-col rounded-lg shadow-xl">
           <div className="p-4">
@@ -119,7 +116,6 @@ function AccountDropdown({ defaultImage, user, auth, logout }) {
                     </a>
                   </Link>
                 </li>
-
               )}
             </ul>
           </div>
@@ -140,37 +136,30 @@ export default function Middlebar({ className, settings }) {
   const dispatch = useDispatch();
   const value = useContext(DefaultUser);
 
-  const [searchToggle, setSearchToggle] = useState(false);
   const [user, setUser] = useState(null);
   const [defaultImage, setDefaultImage] = useState(null);
   const [auth, setAuth] = useState(null);
   const [cartItems, setCartItem] = useState(null);
   const [langCntnt, setLangCntnt] = useState(null);
 
-  // Handle user data from context
   useEffect(() => {
     setUser(value.user);
   }, [value]);
-  // Set default image from setup
   useEffect(() => {
     if (websiteSetup && !defaultImage) {
       setDefaultImage(websiteSetup.payload?.defaultProfile?.image);
     }
   }, [websiteSetup, defaultImage]);
-  // Handle auth from localStorage
   useEffect(() => {
     setAuth(JSON.parse(localStorage.getItem("auth")));
   }, []);
-  // Set cart items
   useEffect(() => {
     cart && setCartItem(cart.cartProducts);
   }, [cart]);
-  // Language content
   useEffect(() => {
     setLangCntnt(languageModel());
   }, []);
 
-  // Logout function
   const logout = () => {
     if (auth) {
       apiRequest.logout(auth.access_token);
@@ -203,54 +192,21 @@ export default function Middlebar({ className, settings }) {
               </Link>
             </div>
 
-            {/* Search Overlay */}
-            <div
-              className={`w-full h-[240px] bg-white delay-300 shadow transition-all duration-300 ease-in-out fixed left-0 top-0 transform ${searchToggle ? `translate-y-0` : "-translate-y-[100vh]"
-                }`}
-              style={{ zIndex: 99 }}
-            >
-              <div className="w-full h-full flex justify-center items-center relative">
-                <div className="w-[620px] h-[60px]">
-                  <SearchBox />
-                </div>
-                <button
-                  onClick={() => setSearchToggle(false)}
-                  type="button"
-                  className="text-qred absolute right-5 top-5"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="1.5"
-                    stroke="currentColor"
-                    className="w-6 h-6"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M6 18L18 6M6 6l12 12"
-                    ></path>
-                  </svg>
-                </button>
+            {/* ---- Large Search Input in Middle ---- */}
+            <div className="flex-1 flex justify-center px-6">
+              <div className="w-full max-w-3xl">
+                <SearchBox
+                  className="w-full h-[44px] px-5 rounded-full flex items-center"
+                  inputClassName="bg-transparent w-full border-0 outline-none px-2 h-[44px] text-sm"
+                  iconClassName="text-qgray"
+                  placeholder="Search"
+                />
               </div>
             </div>
-            {/* Search Overlay Blackout */}
-            <div
-              onClick={() => setSearchToggle(false)}
-              className={`w-full h-screen transition-all duration-300 ease-in-out bg-black bg-opacity-50 fixed left-0 top-0 z-40 transform ${searchToggle ? `translate-y-0` : "-translate-y-[100vh]"
-                }`}
-            ></div>
+            {/* ---- End Search Input ---- */}
 
             {/* Right menu */}
             <div className="flex space-x-6 items-center relative">
-              {/* Search Icon */}
-              <div
-                onClick={() => setSearchToggle(true)}
-                className="w-[52px] h-[52px] bg-yellow flex justify-center items-center rounded-full cursor-pointer"
-              >
-                <Search size={22} className="text-[#232532]" />
-              </div>
               {/* Compare */}
               <div className="compaire relative">
                 {auth ? (
@@ -260,7 +216,7 @@ export default function Middlebar({ className, settings }) {
                       className="flex space-x-4 items-center"
                     >
                       <span className="cursor-pointer text-[#6E6D79]">
-                        <Shuffle s size={22} className="text-[#6E6D79]" />
+                        <Shuffle size={22} className="text-[#6E6D79]" />
                       </span>
                       <span className="text-base text-qgray font-medium">
                         Compare
@@ -274,7 +230,7 @@ export default function Middlebar({ className, settings }) {
                       className="flex space-x-4 items-center"
                     >
                       <span className="cursor-pointer text-[#6E6D79]">
-                        <Heart size={22} className="text-[#6E6D79]" />
+                        <Shuffle size={22} className="text-[#6E6D79]" />
                       </span>
                       <span className="text-base text-qgray font-medium capitalize">
                         {langCntnt && langCntnt.compare}
@@ -292,7 +248,6 @@ export default function Middlebar({ className, settings }) {
                 <Link href="/wishlist" passHref>
                   <a rel="noopener noreferrer" className="flex space-x-4 items-center">
                     <span className="cursor-pointer text-[#6E6D79]">
-                      {/* SVG ICON OMITTED FOR BREVITY */}
                       <svg
                         width="23"
                         height="22"
