@@ -6,13 +6,10 @@ import { useDispatch, useSelector } from "react-redux";
 import apiRequest from "../../../../../utils/apiRequest";
 import { fetchWishlist } from "../../../../store/wishlistData";
 import Cart from "../../../Cart";
-import ThinBag from "../../../Helpers/icons/ThinBag";
-import ThinPeople from "../../../Helpers/icons/ThinPeople";
 import SearchBox from "../../../Helpers/SearchBox";
 import languageModel from "../../../../../utils/languageModel";
 import DefaultUser from "../../../../contexts/DefaultUser";
-import { ShoppingCart, UserRound, Heart } from "lucide-react";
-import { Shuffle } from "lucide-react";
+import { ShoppingCart, UserRound, Heart , Headphones , Headset } from "lucide-react";
 
 function AccountDropdown({ defaultImage, user, auth, logout }) {
   const [profileOpen, setProfileOpen] = useState(false);
@@ -55,7 +52,7 @@ function AccountDropdown({ defaultImage, user, auth, logout }) {
               alt="user"
             />
           ) : (
-            <ThinPeople className="w-8 h-8 text-[#6E6D79]" />
+            <UserRound size={22} className="text-[#6E6D79]" />
           )}
         </div>
         {auth && user && (
@@ -106,16 +103,38 @@ function AccountDropdown({ defaultImage, user, auth, logout }) {
                   </li>
                 </>
               ) : (
-                <li>
-                  <Link href="/login">
-                    <a
-                      className="text-qgray hover:text-qblack hover:font-semibold block"
-                      onClick={() => setProfileOpen(false)}
-                    >
-                      Login
-                    </a>
-                  </Link>
-                </li>
+                <>
+                  <li>
+                    <Link href="/login">
+                      <a
+                        className="text-qgray hover:text-qblack hover:font-semibold block"
+                        onClick={() => setProfileOpen(false)}
+                      >
+                        Login
+                      </a>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/tracking-order">
+                      <a
+                        className="text-qgray hover:text-qblack hover:font-semibold block"
+                        onClick={() => setProfileOpen(false)}
+                      >
+                        Track Order
+                      </a>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/contact">
+                      <a
+                        className="text-qgray hover:text-qblack hover:font-semibold block"
+                        onClick={() => setProfileOpen(false)}
+                      >
+                        Contact
+                      </a>
+                    </Link>
+                  </li>
+                </>
               )}
             </ul>
           </div>
@@ -216,10 +235,10 @@ export default function Middlebar({ className, settings }) {
                       className="flex space-x-4 items-center"
                     >
                       <span className="cursor-pointer text-[#6E6D79]">
-                        <Shuffle size={22} className="text-[#6E6D79]" />
+                        <Headset size={22} className="text-[#6E6D79]" />
                       </span>
                       <span className="text-base text-qgray font-medium">
-                        Compare
+                        Help
                       </span>
                     </a>
                   </Link>
@@ -230,35 +249,30 @@ export default function Middlebar({ className, settings }) {
                       className="flex space-x-4 items-center"
                     >
                       <span className="cursor-pointer text-[#6E6D79]">
-                        <Shuffle size={22} className="text-[#6E6D79]" />
+                        <Headset size={22} className="text-[#6E6D79]" />
                       </span>
                       <span className="text-base text-qgray font-medium capitalize">
-                        {langCntnt && langCntnt.compare}
+                        Help
                       </span>
                     </a>
                   </Link>
                 )}
-                <span className="w-[18px] h-[18px] rounded-full  absolute -top-1.5 left-4 flex justify-center items-center text-[9px]">
+                {/* <span className="w-[18px] h-[18px] rounded-full  absolute -top-1.5 left-4 flex justify-center items-center text-[9px]">
                   {compareProducts ? compareProducts.products.length : 0}
-                </span>
+                </span> */}
               </div>
 
               {/* Wishlist */}
               <div className="favorite relative">
                 <Link href="/wishlist" passHref>
                   <a rel="noopener noreferrer" className="flex space-x-4 items-center">
-                    <span className="cursor-pointer text-[#6E6D79]">
-                      <svg
-                        width="23"
-                        height="22"
-                        viewBox="0 0 23 22"
-                        className="fill-current"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path d="M11.4048 3.54989C11.6188 3.30247 11.807 3.07783 12.0028 2.86001C15.0698 -0.54838 20.3879 0.51717 22.1581 4.60443C23.4189 7.5161 22.8486 10.213 20.9966 12.6962C19.6524 14.498 17.95 15.9437 16.2722 17.4108C15.0308 18.4964 13.7741 19.5642 12.5247 20.6408C11.6987 21.3523 11.1109 21.3607 10.2924 20.6397C8.05184 18.6657 5.79232 16.7125 3.59037 14.6964C2.35873 13.5686 1.33274 12.2553 0.638899 10.7086C-0.626827 7.88722 0.0325472 4.41204 2.22314 2.41034C4.84019 0.0185469 8.81764 0.369176 11.1059 3.19281C11.1968 3.30475 11.2908 3.41404 11.4048 3.54989Z" />
-                      </svg>
-                    </span>
+                    <Heart
+                      size={22}
+                      className="text-[#6E6D79]"
+                      fill="none"
+                      stroke="currentColor"
+                      style={{ fill: "none" }}
+                    />
                     <span className="text-base text-qgray font-medium capitalize">
                       {langCntnt && langCntnt.Wishlist}
                     </span>
@@ -275,10 +289,15 @@ export default function Middlebar({ className, settings }) {
                   <Link href="/cart" passHref>
                     <a rel="noopener noreferrer" className="flex space-x-4 items-center">
                       <span className="cursor-pointer text-[#6E6D79]">
-                        <ThinBag className="fill-current" />
+                        <ShoppingCart
+                          size={22}
+                          className="text-[#6E6D79]"
+                          fill="none"
+                          stroke="currentColor"
+                          style={{ fill: "none" }} />
                       </span>
                       <span className="text-base text-qgray font-medium">
-                        {langCntnt && langCntnt.Cart}
+                        Cart
                       </span>
                     </a>
                   </Link>
