@@ -95,6 +95,17 @@ function CheakoutPage() {
   const [paypalStatus, setPaypalStatus] = useState(null);
   const [bankPaymentStatus, setBankPaymentStatus] = useState(null);
   const [sslStatus, setSslStatus] = useState(null);
+    // --------------------------------------------------------
+  // AUTO-SELECT FIRST SHIPPING RULE WHENEVER THEY LOAD
+  useEffect(() => {
+    if (shippingRulesByCityId && shippingRulesByCityId.length > 0) {
+      const first = shippingRulesByCityId[0];
+      setSelectedRule(first.id);
+      setShippingCharge(first.shipping_fee);
+    }
+  }, [shippingRulesByCityId]);
+  // --------------------------------------------------------
+
   const submitCoupon = () => {
     if (auth()) {
       apiRequest
@@ -550,7 +561,7 @@ function CheakoutPage() {
                   {
                     shipping_address_id: selectedShipping,
                     billing_address_id: selectedBilling,
-                    shipping_method_id: parseInt(selectedRule),
+                    // shipping_method_id: parseInt(selectedRule),
                     coupon: couponCode && couponCode.code,
                   },
                   auth().access_token
@@ -809,7 +820,7 @@ function CheakoutPage() {
             );
           }
         } else {
-          toast.error(langCntnt && langCntnt.Please_Select_Shipping_Rule);
+          // toast.error(langCntnt && langCntnt.Please_Select_Shipping_Rule);
         }
       }
     }

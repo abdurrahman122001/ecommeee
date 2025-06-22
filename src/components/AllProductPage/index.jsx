@@ -12,7 +12,7 @@ import ProductCardRowStyleOne from "../Helpers/Cards/ProductCardRowStyleOne";
 import languageModel from "../../../utils/languageModel";
 import LoaderStyleOne from "../Helpers/Loaders/LoaderStyleOne";
 import { useRouter } from "next/router";
-
+import image from "../../../public/images/banner.jpg"
 export default function AllProductPage({ response, sellerInfo }) {
   const router = useRouter();
   const [categoryExistInRoute, setCategoryExistInRoute] = useState(false);
@@ -65,6 +65,7 @@ export default function AllProductPage({ response, sellerInfo }) {
   const [categoriesFilter, setCategoriesFilter] = useState(null);
   const [brands, setBrands] = useState(null);
   const [cardViewStyle, setCardViewStyle] = useState("col");
+  
   const products =
     resProducts &&
     resProducts.length > 0 &&
@@ -185,53 +186,53 @@ export default function AllProductPage({ response, sellerInfo }) {
     setNxtPage(response.data && response.data.products.next_page_url);
     setCategoriesFilter(
       response.data &&
-        response.data.categories.length > 0 &&
-        response.data.categories.map((item) => {
-          return {
-            ...item,
-            selected: false,
-          };
-        })
+      response.data.categories.length > 0 &&
+      response.data.categories.map((item) => {
+        return {
+          ...item,
+          selected: false,
+        };
+      })
     );
     setVariantsFilter(
       response.data &&
-        response.data.activeVariants.length > 0 &&
-        response.data.activeVariants.map((varient) => {
-          return {
-            ...varient,
-            active_variant_items:
-              varient.active_variant_items &&
-              varient.active_variant_items.length > 0 &&
-              varient.active_variant_items.map((variant_item) => {
-                return {
-                  ...variant_item,
-                  selected: false,
-                };
-              }),
-          };
-        })
+      response.data.activeVariants.length > 0 &&
+      response.data.activeVariants.map((varient) => {
+        return {
+          ...varient,
+          active_variant_items:
+            varient.active_variant_items &&
+            varient.active_variant_items.length > 0 &&
+            varient.active_variant_items.map((variant_item) => {
+              return {
+                ...variant_item,
+                selected: false,
+              };
+            }),
+        };
+      })
     );
     setBrands(
       response.data &&
-        response.data.brands.length > 0 &&
-        response.data.brands.map((item) => {
-          return {
-            ...item,
-            selected: false,
-          };
-        })
+      response.data.brands.length > 0 &&
+      response.data.brands.map((item) => {
+        return {
+          ...item,
+          selected: false,
+        };
+      })
     );
     const min = response.data &&
-        response.data.products.data &&
-        Math.min(
-            ...response.data.products.data.map((item) => parseInt(item.price))
-        );
-    const max =  response.data &&
-        response.data.products.data &&
-        Math.max(
-            ...response.data.products.data.map((item) => parseInt(item.price))
-        );
-    const volumeArr = [min,max];
+      response.data.products.data &&
+      Math.min(
+        ...response.data.products.data.map((item) => parseInt(item.price))
+      );
+    const max = response.data &&
+      response.data.products.data &&
+      Math.max(
+        ...response.data.products.data.map((item) => parseInt(item.price))
+      );
+    const volumeArr = [min, max];
     setVolume(volumeArr);
   }, [response.data]);
   useEffect(() => {
@@ -256,8 +257,8 @@ export default function AllProductPage({ response, sellerInfo }) {
         const brandsQuery =
           selectedBrandsFilterItem.length > 0
             ? selectedBrandsFilterItem.map((value) => {
-                return `brands[]=${value}`;
-              })
+              return `brands[]=${value}`;
+            })
             : [];
         const brandString =
           brandsQuery.length > 0
@@ -267,8 +268,8 @@ export default function AllProductPage({ response, sellerInfo }) {
         const categoryQuery =
           selectedCategoryFilterItem.length > 0
             ? selectedCategoryFilterItem.map((value) => {
-                return `categories[]=${value}`;
-              })
+              return `categories[]=${value}`;
+            })
             : [];
         const categoryString =
           categoryQuery.length > 0
@@ -278,8 +279,8 @@ export default function AllProductPage({ response, sellerInfo }) {
         const variantQuery =
           selectedVarientFilterItem.length > 0
             ? selectedVarientFilterItem.map((value) => {
-                return `variantItems[]=${value}`;
-              })
+              return `variantItems[]=${value}`;
+            })
             : [];
         const variantString =
           variantQuery.length > 0
@@ -287,12 +288,9 @@ export default function AllProductPage({ response, sellerInfo }) {
             : "";
         axios
           .get(
-            `${process.env.NEXT_PUBLIC_BASE_URL}api/search-product?${
-              brandString && brandString
-            }${categoryString && categoryString}${
-              variantString && variantString
-            }min_price=${volume[0]}&max_price=${volume[1]}${
-              sellerInfo ? `&shop_name=${sellerInfo.seller.slug}` : ""
+            `${process.env.NEXT_PUBLIC_BASE_URL}api/search-product?${brandString && brandString
+            }${categoryString && categoryString}${variantString && variantString
+            }min_price=${volume[0]}&max_price=${volume[1]}${sellerInfo ? `&shop_name=${sellerInfo.seller.slug}` : ""
             }`
           )
           .then((res) => {
@@ -305,8 +303,17 @@ export default function AllProductPage({ response, sellerInfo }) {
             console.log(err);
           });
       } else {
-        setNxtPage(response.data && response.data.products.next_page_url);
-        setProducts(response.data.products.data);
+        if (router.query.category) {
+          axios
+            .get(`${process.env.NEXT_PUBLIC_BASE_URL}api/product?category=${router.query.category}`)
+            .then((res) => {
+              setProducts(res.data.products.data);
+              setNxtPage(res.data.products.next_page_url);
+            });
+        } else {
+          setNxtPage(response.data && response.data.products.next_page_url);
+          setProducts(response.data.products.data);
+        }
       }
     } else {
       return;
@@ -325,13 +332,9 @@ export default function AllProductPage({ response, sellerInfo }) {
         .get(`${nxtPage}`)
         .then((res) => {
           setLoading(false);
-          if (res.data) {
-            if (res.data.products.data.length > 0) {
-              res.data.products.data.map((item) => {
-                setProducts((prev) => [...prev, item]);
-              });
-              setNxtPage(res.data.products.next_page_url);
-            }
+          if (res.data && res.data.products.data.length > 0) {
+            setProducts((prev) => [...prev, ...res.data.products.data]);
+            setNxtPage(res.data.products.next_page_url);
           }
         })
         .catch((err) => {
@@ -360,8 +363,9 @@ export default function AllProductPage({ response, sellerInfo }) {
                 data-aos="fade-right"
                 className="saller-info w-full mb-[40px] sm:h-[328px]  sm:flex justify-between items-center px-11 overflow-hidden relative py-10 sm:py-0 rounded"
                 style={{
-                  background: `url(/assets/images/saller-cover.png) no-repeat`,
+                  background: `url(../../../public/images/banner.jpg) no-repeat`,
                   backgroundSize: "cover",
+                  backgroundPosition: 'top'
                 }}
               >
                 <div className="saller-text-details  w-72">
@@ -479,10 +483,9 @@ export default function AllProductPage({ response, sellerInfo }) {
                       <Image
                         layout="fill"
                         objectFit="scale-down"
-                        src={`${
-                          process.env.NEXT_PUBLIC_BASE_URL +
+                        src={`${process.env.NEXT_PUBLIC_BASE_URL +
                           sellerInfo.seller.logo
-                        }`}
+                          }`}
                         alt="logo"
                         className="object-contain"
                       />
@@ -496,6 +499,52 @@ export default function AllProductPage({ response, sellerInfo }) {
                 </div>
               </div>
             )}
+            <div
+              className="w-full mb-5 flex items-center justify-center"
+              style={{
+                backgroundImage: "url('/images/banner.jpg')", // Change the path as needed
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                borderRadius: "0.75rem", // rounded-xl
+                minHeight: "100px",
+                position: "relative",
+                overflow: "hidden"
+              }}
+            >
+              {/* Overlay */}
+              <div className="absolute inset-0 bg-black opacity-30"></div>
+
+              {/* Breadcrumb Content */}
+              <nav
+                className="relative z-10 text-sm flex items-center justify-center space-x-2 py-7"
+                aria-label="Breadcrumb"
+              >
+                <Link href="/" passHref>
+                  <span className="hover:underline text-white cursor-pointer">Home</span>
+                </Link>
+                <span className="mx-1 text-white">/</span>
+                {selectedCategoryFilterItem && selectedCategoryFilterItem.length > 0 && categoriesFilter ? (
+                  categoriesFilter
+                    .filter((cat) => selectedCategoryFilterItem.includes(cat.id.toString()))
+                    .map((cat, idx, arr) => (
+                      <span key={cat.id} className="flex items-center">
+                        <span className="text-white font-semibold">{cat.name}</span>
+                        {idx < arr.length - 1 && <span className="mx-1 text-white">/</span>}
+                      </span>
+                    ))
+                ) : (
+                  <span className="text-white">All Products</span>
+                )}
+                {router.query.search && (
+                  <>
+                    <span className="mx-1 text-white">/</span>
+                    <span className="text-qyellow font-medium">
+                      Search: "{router.query.search}"
+                    </span>
+                  </>
+                )}
+              </nav>
+            </div>
 
             {/*<BreadcrumbCom />*/}
             <div className="w-full xl:flex xl:space-x-[30px]">
@@ -529,13 +578,12 @@ export default function AllProductPage({ response, sellerInfo }) {
                   className="mb-[30px]"
                   variantsFilter={variantsFilter}
                 />
-                {response.data && response.data.shopPageSidebarBanner && parseInt(response.data.shopPageSidebarBanner.status)===1 && (
+                {response.data && response.data.shopPageSidebarBanner && parseInt(response.data.shopPageSidebarBanner.status) === 1 && (
                   <div
                     style={{
-                      backgroundImage: `url(${
-                        process.env.NEXT_PUBLIC_BASE_URL +
+                      backgroundImage: `url(${process.env.NEXT_PUBLIC_BASE_URL +
                         response.data.shopPageSidebarBanner.image
-                      })`,
+                        })`,
                       backgroundSize: `cover`,
                       backgroundRepeat: `no-repeat`,
                     }}
@@ -635,11 +683,10 @@ export default function AllProductPage({ response, sellerInfo }) {
                         <button
                           onClick={() => setCardViewStyle("col")}
                           type="button"
-                          className={`hover:text-qpurple w-6 h-6 ${
-                            cardViewStyle === "col"
-                              ? "text-qpurple"
-                              : "text-qgray"
-                          }`}
+                          className={`hover:text-qpurple w-6 h-6 ${cardViewStyle === "col"
+                            ? "text-qpurple"
+                            : "text-qgray"
+                            }`}
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -653,11 +700,10 @@ export default function AllProductPage({ response, sellerInfo }) {
                         <button
                           onClick={() => setCardViewStyle("row")}
                           type="button"
-                          className={`hover:text-qpurple w-6 h-6 ${
-                            cardViewStyle === "row"
-                              ? "text-qpurple"
-                              : "text-qgray"
-                          }`}
+                          className={`hover:text-qpurple w-6 h-6 ${cardViewStyle === "row"
+                            ? "text-qpurple"
+                            : "text-qgray"
+                            }`}
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -729,11 +775,11 @@ export default function AllProductPage({ response, sellerInfo }) {
                       </div>
                     )}
                     {response.data && response.data.shopPageCenterBanner && parseInt(response.data.shopPageCenterBanner.status) === 1 && (
-                        <div className="w-full relative text-qblack mb-[40px]">
-                          <OneColumnAdsTwo
-                              data={response.data.shopPageCenterBanner}
-                          />
-                        </div>
+                      <div className="w-full relative text-qblack mb-[40px]">
+                        <OneColumnAdsTwo
+                          data={response.data.shopPageCenterBanner}
+                        />
+                      </div>
                     )}
 
                     {products && cardViewStyle === "col" && (
@@ -819,7 +865,7 @@ export default function AllProductPage({ response, sellerInfo }) {
                           Search Results:
                         </h2>
                         {!categoryExistInRoute &&
-                        relatedProducts.length === 0 ? (
+                          relatedProducts.length === 0 ? (
                           <>
                             <p className="text-lg text-qgray  mb-[200px]">
                               Your search -{" "}
