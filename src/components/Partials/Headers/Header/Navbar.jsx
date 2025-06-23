@@ -47,7 +47,7 @@ export default function Navbar({ className }) {
             </Link>
           </li>
           <li>
-            <Link href="/contact-us" passHref>
+            <Link href="/contact" passHref>
               <a className="text-[15px] md:text-lg lg:text-xl font-medium text-qblack px-1 py-1 border-b-2 border-transparent hover:border-qpurple transition-all duration-200">
                 {langCntnt?.Contact_Us || "Contact Us"}
               </a>

@@ -65,7 +65,7 @@ export default function AllProductPage({ response, sellerInfo }) {
   const [categoriesFilter, setCategoriesFilter] = useState(null);
   const [brands, setBrands] = useState(null);
   const [cardViewStyle, setCardViewStyle] = useState("col");
-  
+
   const products =
     resProducts &&
     resProducts.length > 0 &&
@@ -128,31 +128,90 @@ export default function AllProductPage({ response, sellerInfo }) {
       setSelectedVarientFilterItem((p) => [...p, name]);
     }
   };
-  const categoryHandler = (e) => {
-    const { name } = e.target;
-    const filterCat =
-      categoriesFilter &&
-      categoriesFilter.length > 0 &&
-      categoriesFilter.map((item) => {
-        if (parseInt(item.id) === parseInt(name)) {
-          return {
-            ...item,
-            selected: !item.selected,
-          };
-        } else {
-          return {
-            ...item,
-          };
-        }
-      });
-    setCategoriesFilter(filterCat);
-    if (selectedCategoryFilterItem.includes(name)) {
-      const newArr = selectedCategoryFilterItem.filter((like) => like !== name);
-      setSelectedCategoryFilterItem(newArr);
+// Handler
+const categoryHandler = (e) => {
+  const { name } = e.target; // name = category id
+  const catObj = categoriesFilter.find((cat) => cat.id.toString() === name);
+
+  // Toggle in filter UI
+  setCategoriesFilter(categoriesFilter.map((cat) =>
+    cat.id.toString() === name ? { ...cat, selected: !cat.selected } : cat
+  ));
+
+  // Toggle in selected state
+  if (selectedCategoryFilterItem.some((cat) => cat.id === name)) {
+    setSelectedCategoryFilterItem(selectedCategoryFilterItem.filter((cat) => cat.id !== name));
+  } else {
+    setSelectedCategoryFilterItem([...selectedCategoryFilterItem, { id: name, slug: catObj.slug }]);
+  }
+};
+
+// Filter useEffect (inside AllProductPage)
+useEffect(() => {
+  if (response.data) {
+    const min = Math.min(...response.data.products.data.map((item) => parseInt(item.price)));
+    const max = Math.max(...response.data.products.data.map((item) => parseInt(item.price)));
+    const check =
+      selectedVarientFilterItem.length > 0 ||
+      selectedCategoryFilterItem.length > 0 ||
+      selectedBrandsFilterItem.length > 0 ||
+      (volume[0] && volume[0] !== min) ||
+      (volume[1] && volume[1] !== max);
+
+    if (check) {
+      const brandsQuery = selectedBrandsFilterItem.length
+        ? selectedBrandsFilterItem.map((value) => `brands[]=${value}`)
+        : [];
+      const brandString = brandsQuery.length ? brandsQuery.map((value) => value + "&").join("") : "";
+
+      const categoryQuery = selectedCategoryFilterItem.length
+        ? selectedCategoryFilterItem.map((cat) => `categories[]=${cat.slug}`)
+        : [];
+      const categoryString = categoryQuery.length ? categoryQuery.map((value) => value + "&").join("") : "";
+
+      const variantQuery = selectedVarientFilterItem.length
+        ? selectedVarientFilterItem.map((value) => `variantItems[]=${value}`)
+        : [];
+      const variantString = variantQuery.length ? variantQuery.map((value) => value + "&").join("") : "";
+
+      axios
+        .get(
+          `${process.env.NEXT_PUBLIC_BASE_URL}api/search-product?${brandString}${categoryString}${variantString}min_price=${volume[0]}&max_price=${volume[1]}${sellerInfo ? `&shop_name=${sellerInfo.seller.slug}` : ""}`
+        )
+        .then((res) => {
+          res.data && res.data.products.data.length > 0
+            ? setProducts(res.data.products.data)
+            : setProducts([]);
+          setNxtPage(res.data && res.data.products.next_page_url);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     } else {
-      setSelectedCategoryFilterItem((p) => [...p, name]);
+      // fallback: show all products
+      if (router.query.category) {
+        axios
+          .get(
+            `${process.env.NEXT_PUBLIC_BASE_URL}api/product?category=${router.query.category}`
+          )
+          .then((res) => {
+            setProducts(res.data.products.data);
+            setNxtPage(res.data.products.next_page_url);
+          });
+      } else {
+        setNxtPage(response.data && response.data.products.next_page_url);
+        setProducts(response.data.products.data);
+      }
     }
-  };
+  }
+}, [
+  selectedVarientFilterItem,
+  selectedCategoryFilterItem,
+  selectedBrandsFilterItem,
+  volume,
+  response.data,
+]);
+
   const brandsHandler = (e) => {
     const { name } = e.target;
     const filterBrands =
@@ -265,17 +324,15 @@ export default function AllProductPage({ response, sellerInfo }) {
             ? brandsQuery.map((value) => value + "&").join("")
             : "";
 
-        const categoryQuery =
-          selectedCategoryFilterItem.length > 0
-            ? selectedCategoryFilterItem.map((value) => {
-              return `categories[]=${value}`;
-            })
-            : [];
-        const categoryString =
-          categoryQuery.length > 0
-            ? categoryQuery.map((value) => value + "&").join("")
-            : "";
-
+        // --- THIS PART IS UPDATED! ---
+const categoryQuery =
+  selectedCategoryFilterItem.length > 0
+    ? selectedCategoryFilterItem.map((cat) => `categories[]=${cat.slug}`)
+    : [];
+const categoryString =
+  categoryQuery.length > 0
+    ? categoryQuery.map((value) => value + "&").join("")
+    : "";
         const variantQuery =
           selectedVarientFilterItem.length > 0
             ? selectedVarientFilterItem.map((value) => {
@@ -288,9 +345,13 @@ export default function AllProductPage({ response, sellerInfo }) {
             : "";
         axios
           .get(
-            `${process.env.NEXT_PUBLIC_BASE_URL}api/search-product?${brandString && brandString
-            }${categoryString && categoryString}${variantString && variantString
-            }min_price=${volume[0]}&max_price=${volume[1]}${sellerInfo ? `&shop_name=${sellerInfo.seller.slug}` : ""
+            `${process.env.NEXT_PUBLIC_BASE_URL}api/search-product?${brandString &&
+            brandString
+            }${categoryString && categoryString}${variantString &&
+            variantString
+            }min_price=${volume[0]}&max_price=${volume[1]}${sellerInfo
+              ? `&shop_name=${sellerInfo.seller.slug}`
+              : ""
             }`
           )
           .then((res) => {
@@ -305,7 +366,9 @@ export default function AllProductPage({ response, sellerInfo }) {
       } else {
         if (router.query.category) {
           axios
-            .get(`${process.env.NEXT_PUBLIC_BASE_URL}api/product?category=${router.query.category}`)
+            .get(
+              `${process.env.NEXT_PUBLIC_BASE_URL}api/product?category=${router.query.category}`
+            )
             .then((res) => {
               setProducts(res.data.products.data);
               setNxtPage(res.data.products.next_page_url);
@@ -319,12 +382,13 @@ export default function AllProductPage({ response, sellerInfo }) {
       return;
     }
   }, [
-    selectedVarientFilterItem,
-    selectedCategoryFilterItem,
-    selectedBrandsFilterItem,
-    volume,
-    response.data,
+  selectedVarientFilterItem,
+  selectedCategoryFilterItem,   // must be here!
+  selectedBrandsFilterItem,
+  volume,
+  response.data,
   ]);
+
   const nextPageHandler = async () => {
     setLoading(true);
     if (nxtPage) {
@@ -525,7 +589,7 @@ export default function AllProductPage({ response, sellerInfo }) {
                 <span className="mx-1 text-white">/</span>
                 {selectedCategoryFilterItem && selectedCategoryFilterItem.length > 0 && categoriesFilter ? (
                   categoriesFilter
-                    .filter((cat) => selectedCategoryFilterItem.includes(cat.id.toString()))
+                    .filter((cat) => selectedCategoryFilterItem.some(item => item.id === cat.id.toString()))
                     .map((cat, idx, arr) => (
                       <span key={cat.id} className="flex items-center">
                         <span className="text-white font-semibold">{cat.name}</span>
@@ -553,7 +617,6 @@ export default function AllProductPage({ response, sellerInfo }) {
                   filterToggle={filterToggle}
                   filterToggleHandler={() => setToggle(!filterToggle)}
                   categories={categoriesFilter}
-                  brands={brands}
                   varientHandler={varientHandler}
                   categoryHandler={categoryHandler}
                   brandsHandler={brandsHandler}
@@ -573,11 +636,13 @@ export default function AllProductPage({ response, sellerInfo }) {
                         parseInt(item.price)
                       )
                     )
-                  }
+                  } 
                   volumeHandler={(value) => volumeHandler(value)}
                   className="mb-[30px]"
                   variantsFilter={variantsFilter}
+                  selectedCategoryFilterItem={selectedCategoryFilterItem}
                 />
+
                 {response.data && response.data.shopPageSidebarBanner && parseInt(response.data.shopPageSidebarBanner.status) === 1 && (
                   <div
                     style={{

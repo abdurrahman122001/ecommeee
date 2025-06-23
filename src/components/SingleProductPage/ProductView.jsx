@@ -16,6 +16,7 @@ import Selectbox from "../Helpers/Selectbox";
 import CheckProductIsExistsInFlashSale from "../Shared/CheckProductIsExistsInFlashSale";
 import languageModel from "../../../utils/languageModel";
 import LoginContext from "../Contexts/LoginContexts";
+
 const Redirect = ({ message, linkTxt }) => {
   return (
     <div className="flex space-x-2 items-center">
@@ -44,9 +45,9 @@ export default function ProductView({
     product && product.active_variants.length > 0 && product.active_variants;
   const [getFirstVarients, setFirstVarients] = useState(
     varients &&
-      varients.map((v) =>
-        v.active_variant_items.length > 0 ? v.active_variant_items[0] : {}
-      )
+    varients.map((v) =>
+      v.active_variant_items.length > 0 ? v.active_variant_items[0] : {}
+    )
   );
   const [langCntnt, setLangCntnt] = useState(null);
   useEffect(() => {
@@ -54,9 +55,10 @@ export default function ProductView({
   }, []);
   const [price, setPrice] = useState(null);
   const [offerPrice, setOffer] = useState(null);
+  const [showModal, setShowModal] = useState(false);
   const [src, setSrc] = useState(product.thumb_image);
   useEffect(() => {
-   setSrc(product.thumb_image)
+    setSrc(product.thumb_image)
   }, [product]);
 
   const changeImgHandler = (current) => {
@@ -93,7 +95,7 @@ export default function ProductView({
         getFirstVarients.map((v) => (v.price ? v.price : 0));
       const sumPrice = parseFloat(
         prices.reduce((prev, curr) => parseFloat(prev) + parseFloat(curr), 0) +
-          parseFloat(product.price)
+        parseFloat(product.price)
       );
       setPrice(parseFloat(sumPrice));
       if (product.offer_price) {
@@ -195,16 +197,16 @@ export default function ProductView({
             );
             toast.error(
               res.response &&
-                res.response.data.message &&
-                res.response.data.message
+              res.response.data.message &&
+              res.response.data.message
             );
           })
           .catch((err) => {
             console.log(err);
             toast.error(
               err.response &&
-                err.response.data.message &&
-                err.response.data.message
+              err.response.data.message &&
+              err.response.data.message
             );
           });
         dispatch(fetchCart());
@@ -295,29 +297,56 @@ export default function ProductView({
   return (
     <>
       <div
-        className={`product-view w-full lg:flex justify-between h-full ${
-          className || ""
-        }`}
+        className={`product-view w-full lg:flex justify-between h-full ${className || ""
+          }`}
       >
         <div
           data-aos="fade-right"
           className="lg:w-1/2 xl:mr-[70px] lg:mr-[50px]"
         >
           <div className="w-full">
-            <div className="w-full md:h-[600px] h-[350px] border border-qpurplelow/10 flex justify-center items-center overflow-hidden relative mb-3 relative rounded">
-              <Image
-                layout="fill"
-                objectFit="scale-down"
-                src={`${process.env.NEXT_PUBLIC_BASE_URL + src}`}
-                alt=""
-                className="object-contain  transform scale-110"
-              />
+            <div className="w-full md:h-[600px] h-[350px] border border-qpurplelow/10 flex justify-center items-center overflow-hidden relative mb-3 rounded">
+              <div
+                className="w-full h-full cursor-zoom-in"
+                onClick={() => setShowModal(true)}
+                title="Click to view full image"
+                style={{ position: 'relative' }}
+              >
+                <Image
+                  layout="fill"
+                  objectFit="scale-down"
+                  src={`${process.env.NEXT_PUBLIC_BASE_URL + src}`}
+                  alt=""
+                  className="object-contain transform scale-110"
+                  priority={true}
+                />
+              </div>
               {product.offer_price && (
                 <div className="w-[80px] h-[80px] rounded-full bg-qpurple text-qblack flex justify-center items-center text-xl font-medium absolute left-[30px] top-[30px]">
                   <span className="text-white">{pricePercent}%</span>
                 </div>
               )}
+              {/* MODAL for full image */}
+              {showModal && (
+                <div className="fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-80" onClick={() => setShowModal(false)}>
+                  <img
+                    src={`${process.env.NEXT_PUBLIC_BASE_URL + src}`}
+                    alt={product.name}
+                    className="max-w-[90vw] max-h-[90vh] rounded shadow-2xl"
+                    onClick={e => e.stopPropagation()}
+                  />
+                  <button
+                    className="absolute top-4 right-8 text-white text-4xl font-bold"
+                    onClick={() => setShowModal(false)}
+                    aria-label="Close"
+                    type="button"
+                  >
+                    &times;
+                  </button>
+                </div>
+              )}
             </div>
+
             <div className="flex gap-2 flex-wrap">
               <div
                 onClick={() => changeImgHandler(product.thumb_image)}
@@ -326,13 +355,11 @@ export default function ProductView({
                 <Image
                   layout="fill"
                   objectFit="scale-down"
-                  src={`${
-                    process.env.NEXT_PUBLIC_BASE_URL + product.thumb_image
-                  }`}
+                  src={`${process.env.NEXT_PUBLIC_BASE_URL + product.thumb_image
+                    }`}
                   alt=""
-                  className={`w-full h-full object-contain transform scale-110 ${
-                    src !== product.thumb_image ? "opacity-50" : ""
-                  } `}
+                  className={`w-full h-full object-contain transform scale-110 ${src !== product.thumb_image ? "opacity-50" : ""
+                    } `}
                 />
               </div>
               {productsImg &&
@@ -348,9 +375,8 @@ export default function ProductView({
                       objectFit="scale-down"
                       src={`${process.env.NEXT_PUBLIC_BASE_URL + img.image}`}
                       alt=""
-                      className={`w-full h-full object-contain ${
-                        src !== img.image ? "opacity-50" : ""
-                      } `}
+                      className={`w-full h-full object-contain ${src !== img.image ? "opacity-50" : ""
+                        } `}
                     />
                   </div>
                 ))}
@@ -409,11 +435,10 @@ export default function ProductView({
             >
               <span
                 suppressHydrationWarning
-                className={`main-price  font-600  ${
-                  offerPrice
+                className={`main-price  font-600  ${offerPrice
                     ? "line-through text-qgray text-[15px]"
                     : "text-qred text-[24px]"
-                }`}
+                  }`}
               >
                 {offerPrice ? (
                   <span>{currency_icon + price}</span>
@@ -447,9 +472,8 @@ export default function ProductView({
 
             <div data-aos="fade-up" className="mb-[30px]">
               <div
-                className={`text-qgray text-sm text-normal leading-7 ${
-                  more ? "" : "line-clamp-2"
-                }`}
+                className={`text-qgray text-sm text-normal leading-7 ${more ? "" : "line-clamp-2"
+                  }`}
               >
                 {product.short_description}
               </div>
@@ -468,9 +492,8 @@ export default function ProductView({
               </span>
               <span className="text-base font-bold text-qpurple">
                 {parseInt(product.qty) !== 0 && parseInt(product.qty) > 0
-                  ? `${product.qty} ${
-                      langCntnt && langCntnt.Products_Available
-                    } `
+                  ? `${product.qty} ${langCntnt && langCntnt.Products_Available
+                  } `
                   : `${langCntnt && langCntnt.Products_not_Available}`}
               </span>
             </div>
@@ -645,13 +668,12 @@ export default function ProductView({
 
               <div className="flex space-x-5 items-center">
                 <FacebookShareButton
-                  url={`${
-                    typeof window !== "undefined" &&
+                  url={`${typeof window !== "undefined" &&
                     window.location.origin &&
                     window.location.origin +
-                      "/single-product?slug=" +
-                      product.slug
-                  }`}
+                    "/single-product?slug=" +
+                    product.slug
+                    }`}
                   quotes={product.name}
                 >
                   <span className="cursor-pointer">
@@ -670,13 +692,12 @@ export default function ProductView({
                   </span>
                 </FacebookShareButton>
                 <TwitterShareButton
-                  url={`${
-                    typeof window !== "undefined" &&
+                  url={`${typeof window !== "undefined" &&
                     window.location.origin &&
                     window.location.origin +
-                      "/single-product?slug=" +
-                      product.slug
-                  }`}
+                    "/single-product?slug=" +
+                    product.slug
+                    }`}
                   title={product.name}
                 >
                   <span className="cursor-pointer">

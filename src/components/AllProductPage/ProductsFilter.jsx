@@ -18,6 +18,8 @@ export default function ProductsFilter({
   priceMin,
   priceMax,
   brands,
+    selectedCategoryFilterItem,  // <-- add this here
+
 }) {
   const [langCntnt, setLangCntnt] = useState(null);
   const { currency_icon } = settings();
@@ -28,9 +30,8 @@ export default function ProductsFilter({
     <>
       <div
         style={{ boxShadow: "rgba(0, 0, 0, 0.05) 0px 15px 64px" }}
-        className={`filter-widget w-full fixed xl:relative left-0 rounded top-0 h-screen z-10 lg:h-auto overflow-y-scroll lg:overflow-y-auto bg-white px-[30px] pt-[40px] ${
-          className || ""
-        }  ${filterToggle ? "block" : "hidden xl:block"}`}
+        className={`filter-widget w-full fixed xl:relative left-0 rounded top-0 h-screen z-10 lg:h-auto overflow-y-scroll lg:overflow-y-auto bg-white px-[30px] pt-[40px] ${className || ""
+          }  ${filterToggle ? "block" : "hidden xl:block"}`}
       >
         <div className="filter-subject-item pb-10 border-b border-qpurplelow/10">
           <div className="subject-title mb-[30px]">
@@ -42,24 +43,24 @@ export default function ProductsFilter({
             <ul>
               {categories &&
                 categories.length > 0 &&
-                categories.map((item, i) => (
+                categories.map((cat, i) => (
                   <li key={i} className="item mb-5">
                     <div className="flex justify-between items-center">
                       <div className="flex space-x-[14px] items-center">
                         <div>
                           <Checkbox
                             className="accent-qpurple"
-                            id={item.slug}
-                            name={item.id}
+                            id={cat.slug}
+                            name={cat.id}
                             handleChange={(e) => categoryHandler(e)}
-                            checked={item.selected}
+                            checked={selectedCategoryFilterItem.some(selected => selected.id === cat.id.toString())}
                           />
                         </div>
                         <label
-                          htmlFor={item.slug}
+                          htmlFor={cat.slug}
                           className="text-sm font-black font-400 capitalize"
                         >
-                          {item.name}
+                          {cat.name}
                         </label>
                       </div>
                     </div>
@@ -77,12 +78,6 @@ export default function ProductsFilter({
           {volume && (
             <>
               <div className="price-range mb-5">
-                {/*<InputRange*/}
-                {/*  maxValue={priceMax}*/}
-                {/*  minValue={priceMin}*/}
-                {/*  value={volume}*/}
-                {/*  onChange={volumeHandler}*/}
-                {/*/>*/}
                 <RangeSlider value={volume} onInput={volumeHandler} min={priceMin} max={priceMax} />
               </div>
               <p className="text-xs text-qblack font-400">
@@ -91,12 +86,7 @@ export default function ProductsFilter({
             </>
           )}
         </div>
-        <div className="filter-subject-item pb-10 border-b border-qpurplelow/10 mt-10">
-          <div className="subject-title mb-[30px]">
-            <h1 className="text-qblack text-base font-500 capitalize">
-              {langCntnt && langCntnt.Brands}
-            </h1>
-          </div>
+        {/* <div className="filter-subject-item pb-10 border-b border-qpurplelow/10 mt-10">
           <div className="filter-items">
             <ul>
               {brands &&
@@ -127,7 +117,7 @@ export default function ProductsFilter({
                 ))}
             </ul>
           </div>
-        </div>
+        </div> */}
         {variantsFilter &&
           variantsFilter.length &&
           variantsFilter.map((variant, i) => (
